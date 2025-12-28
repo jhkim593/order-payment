@@ -1,0 +1,5 @@
+rootProject.name = 'payment'
+
+include 'common'
+include 'common:outbox'
+include 'common:core'
