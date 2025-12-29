@@ -42,20 +42,20 @@ public class PaymentService {
     }
 
     public void cancelPayment(Long orderId){
-        Payment payment = paymentRepository.findByOrderId(orderId);
-        payment.payemntCancel();
-        paymentRepository.save(payment);
-
-        PortOneBillingKeyPaymentResponseDto response = null;
-
-        PortOneCancelPaymentRequestDto.create()
-
-        try {
-            response = portOneRequestManager.cancelPayment(payment, );
-        } catch (PortOneApiException e) {
-            paymentTransactionManager.updatePaymentFail(payment,e);
-            throw e;
-        }
-        paymentTransactionManager.updatePaymentSuccess(payment, response.getPayment().getPgTxId(), response.getPayment().getPaidAt());
+//        Payment payment = paymentRepository.findByOrderId(orderId);
+//        payment.payemntCancel();
+//        paymentRepository.save(payment);
+//
+//        PortOneBillingKeyPaymentResponseDto response = null;
+//
+//        PortOneCancelPaymentRequestDto.create()
+//
+//        try {
+//            response = portOneRequestManager.cancelPayment(payment, );
+//        } catch (PortOneApiException e) {
+//            paymentTransactionManager.updatePaymentFail(payment,e);
+//            throw e;
+//        }
+//        paymentTransactionManager.updatePaymentSuccess(payment, response.getPayment().getPgTxId(), response.getPayment().getPaidAt());
     }
 }

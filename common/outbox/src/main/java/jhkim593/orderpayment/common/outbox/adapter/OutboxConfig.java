@@ -26,9 +26,9 @@ import java.util.concurrent.Executors;
 @EnableAsync
 @Configuration
 @EnableScheduling
-@ComponentScan("jhkim593.springboard.common.outbox")
-@EntityScan("jhkim593.springboard.common.outbox")
-@EnableJpaRepositories("jhkim593.springboard.common.outbox")
+@ComponentScan("jhkim593.orderpayment.common.outbox")
+@EntityScan("jhkim593.orderpayment.common.outbox")
+@EnableJpaRepositories("jhkim593.orderpayment.common.outbox")
 public class OutboxConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -59,13 +59,13 @@ public class OutboxConfig {
     }
 
     @Bean
-    public NewTopic articleTopic() {
-        return TopicBuilder.name(Topic.ARTICLE)
+    public NewTopic paymentTopic() {
+        return TopicBuilder.name(Topic.PAYMENT)
                 .partitions(3)                          // 파티션 수 설정
                 .replicas(1)                             // 복제 팩터 설정 (1)
                 .config(                                            // 추가 설정
                         TopicConfig.RETENTION_MS_CONFIG,
-                        String.valueOf(30 * 24 * 60 * 60 * 1000L)  // 7일
+                        String.valueOf(30 * 24 * 60 * 60 * 1000L)  // 30일
                 )
                 .build();
     }
