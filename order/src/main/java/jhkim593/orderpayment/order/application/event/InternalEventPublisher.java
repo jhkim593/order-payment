@@ -1,6 +1,7 @@
 package jhkim593.orderpayment.order.application.event;
 
 import jhkim593.orderpayment.common.core.event.payload.CreditOrderCompleteEventPayload;
+import jhkim593.orderpayment.common.core.snowflake.IdGenerator;
 import jhkim593.orderpayment.order.domain.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
