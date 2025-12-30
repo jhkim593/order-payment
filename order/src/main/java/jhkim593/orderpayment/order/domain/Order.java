@@ -1,6 +1,8 @@
 package jhkim593.orderpayment.order.domain;
 
 import jakarta.persistence.*;
+import jhkim593.orderpayment.order.domain.error.ErrorCode;
+import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -55,15 +57,34 @@ public class Order {
         this.orderProducts.add(orderProduct);
     }
 
-    public void complete() {
-        this.status = OrderStatus.COMPLETED;
+    public void success() {
+        if(isComplete()){
+            throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
+        }
+        this.status = OrderStatus.SUCCESS;
     }
 
     public void fail() {
-        this.status = OrderStatus.PAYMENT_FAILED;
+        if(isComplete()){
+            throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
+        }
+        this.status = OrderStatus.FAIL;
     }
 
     public void cancel() {
-        this.status = OrderStatus.CANCELLED;
+        if(!isSuccess()){
+            throw new OrderException(ErrorCode.ORDER_NOT_SUCCEEDED);
+        }
+        this.status = OrderStatus.CANCEL;
+    }
+
+    private boolean isComplete() {
+        return OrderStatus.SUCCESS.equals(status)
+                || OrderStatus.FAIL.equals(status)
+                || OrderStatus.CANCEL.equals(status);
+    }
+
+    private boolean isSuccess(){
+        return OrderStatus.SUCCESS.equals(status);
     }
 }

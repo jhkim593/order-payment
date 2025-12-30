@@ -8,18 +8,18 @@ import java.time.LocalDateTime;
 
 @Getter
 public class EventData<T extends EventPayload> {
-    private Long id;
+    private Long eventId;
     private Long aggregateId;
     private EventType type;
     private T payload;
     private LocalDateTime createdAt;
 
-    public EventData(Long id, Long aggregateId, EventType type, T payload) {
-        this(id, aggregateId, type, payload, LocalDateTime.now());
+    public EventData(Long eventId, Long aggregateId, EventType type, T payload) {
+        this(eventId, aggregateId, type, payload, LocalDateTime.now());
     }
 
-    public EventData(Long id, Long aggregateId, EventType type, T payload, LocalDateTime createdAt) {
-        this.id = id;
+    public EventData(Long eventId, Long aggregateId, EventType type, T payload, LocalDateTime createdAt) {
+        this.eventId = eventId;
         this.aggregateId = aggregateId;
         this.type = type;
         this.payload = payload;

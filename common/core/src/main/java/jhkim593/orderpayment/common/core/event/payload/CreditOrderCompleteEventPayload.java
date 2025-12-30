@@ -7,18 +7,16 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreditPurchaseCompletedEventPayload implements EventPayload {
+public class CreditOrderCompleteEventPayload implements EventPayload {
     private Long userId;
     private Long orderId;
     private Integer creditAmount;
-    private Integer validityDays;
 
-    public static CreditPurchaseCompletedEventPayload create(
+    public static CreditOrderCompleteEventPayload create(
             Long userId,
             Long orderId,
-            Integer creditAmount,
-            Integer validityDays
+            Integer creditAmount
     ) {
-        return new CreditPurchaseCompletedEventPayload(userId, orderId, creditAmount, validityDays);
+        return new CreditOrderCompleteEventPayload(userId, orderId, creditAmount);
     }
 }

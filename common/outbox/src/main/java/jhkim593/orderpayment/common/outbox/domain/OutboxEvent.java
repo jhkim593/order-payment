@@ -27,7 +27,7 @@ public class OutboxEvent {
 
     public static OutboxEvent create(EventData eventData) {
         return OutboxEvent.builder()
-                .id(eventData.getId())
+                .id(eventData.getEventId())
                 .type(eventData.getType())
                 .aggregateId(eventData.getAggregateId())
                 .payload(eventData.payloadJson())

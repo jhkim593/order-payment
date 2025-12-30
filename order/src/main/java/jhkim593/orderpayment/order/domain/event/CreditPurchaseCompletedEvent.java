@@ -11,14 +11,12 @@ public class CreditPurchaseCompletedEvent {
     private Long userId;
     private Long orderId;
     private Integer creditAmount;
-    private Integer validityDays;
 
     public static CreditPurchaseCompletedEvent create(
             Long userId,
             Long orderId,
-            Integer creditAmount,
-            Integer validityDays
+            Integer creditAmount
     ) {
-        return new CreditPurchaseCompletedEvent(userId, orderId, creditAmount, validityDays);
+        return new CreditPurchaseCompletedEvent(userId, orderId, creditAmount);
     }
 }

@@ -5,6 +5,8 @@ import jhkim593.orderpayment.order.adapter.database.jpa.ProductJpaRepository;
 import jhkim593.orderpayment.order.application.required.ProductRepository;
 import jhkim593.orderpayment.order.domain.Product;
 import jhkim593.orderpayment.order.domain.QProduct;
+import jhkim593.orderpayment.order.domain.error.ErrorCode;
+import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -14,22 +16,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductDBRepository implements ProductRepository {
     private final ProductJpaRepository productJpaRepository;
-    private final JPAQueryFactory jpaQueryFactory;
 
     @Override
     public Product find(Long id) {
-        QProduct product = QProduct.product;
-
-        Product result = jpaQueryFactory
-                .selectFrom(product)
-                .where(product.id.eq(id))
-                .fetchOne();
-
-        if (result == null) {
-            throw new IllegalArgumentException("Product not found: " + id);
-        }
-
-        return result;
+        return productJpaRepository.findById(id).orElseThrow(() -> new OrderException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
     @Override

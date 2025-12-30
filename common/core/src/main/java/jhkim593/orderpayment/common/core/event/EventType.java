@@ -1,7 +1,8 @@
 package jhkim593.orderpayment.common.core.event;
 
-import jhkim593.orderpayment.common.core.event.payload.CreditPurchaseCompletedEventPayload;
+import jhkim593.orderpayment.common.core.event.payload.CreditOrderCompleteEventPayload;
 import jhkim593.orderpayment.common.core.event.payload.EventPayload;
+import jhkim593.orderpayment.common.core.event.payload.PaymentFailEventPayload;
 import jhkim593.orderpayment.common.core.event.payload.PaymentSuccessEventPayload;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public enum EventType {
     PAYMENT_SUCCESS(PaymentSuccessEventPayload.class, Topic.PAYMENT),
-    CREDIT_PURCHASE_COMPLETED(CreditPurchaseCompletedEventPayload.class, Topic.PAYMENT);
+    PAYMENT_FAIL(PaymentFailEventPayload.class, Topic.PAYMENT),
+    CREDIT_ORDER_COMPLETE(CreditOrderCompleteEventPayload.class, Topic.PAYMENT);
 
     private final Class<? extends EventPayload> payloadClass;
     private final String topic;

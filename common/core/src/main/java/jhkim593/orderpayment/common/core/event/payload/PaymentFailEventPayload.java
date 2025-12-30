@@ -7,11 +7,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentSuccessEventPayload implements EventPayload {
+public class PaymentFailEventPayload implements EventPayload {
     private Long paymentId;
     private Long orderId;
 
-    public static PaymentSuccessEventPayload create(Long paymentId, Long orderId) {
-        return new PaymentSuccessEventPayload(paymentId, orderId);
+    public static PaymentFailEventPayload create(Long paymentId, Long orderId) {
+        return new PaymentFailEventPayload(paymentId, orderId);
     }
 }

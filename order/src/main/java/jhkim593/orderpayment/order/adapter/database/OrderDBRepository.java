@@ -5,6 +5,8 @@ import jhkim593.orderpayment.order.adapter.database.jpa.OrderJpaRepository;
 import jhkim593.orderpayment.order.application.required.OrderRepository;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.QOrder;
+import jhkim593.orderpayment.order.domain.error.ErrorCode;
+import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -21,19 +23,7 @@ public class OrderDBRepository implements OrderRepository {
 
     @Override
     public Order find(Long id) {
-        QOrder order = QOrder.order;
-
-        Order result = jpaQueryFactory
-                .selectFrom(order)
-                .leftJoin(order.orderProducts).fetchJoin()
-                .where(order.id.eq(id))
-                .fetchOne();
-
-        if (result == null) {
-            throw new IllegalArgumentException("Order not found: " + id);
-        }
-
-        return result;
+        return orderJpaRepository.findById(id).orElseThrow(() -> new OrderException(ErrorCode.ORDER_NOT_FOUND));
     }
 
     @Override
@@ -47,7 +37,7 @@ public class OrderDBRepository implements OrderRepository {
                 .fetchOne();
 
         if (result == null) {
-            throw new IllegalArgumentException("Order not found for user: " + userId);
+            throw new OrderException(ErrorCode.ORDER_NOT_FOUND);
         }
 
         return result;

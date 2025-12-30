@@ -1,8 +1,6 @@
 package jhkim593.orderpayment.common.outbox.adapter;
 
-import jakarta.transaction.Transactional;
 import jhkim593.orderpayment.common.core.event.EventData;
-import jhkim593.orderpayment.common.core.event.EventType;
 import jhkim593.orderpayment.common.outbox.application.provided.EventUpdater;
 import jhkim593.orderpayment.common.outbox.domain.OutboxEvent;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +43,7 @@ public class EventPublisher {
                     eventData.getAggregateId().toString(),
                     eventData.toJson()
             ).get(1, TimeUnit.SECONDS);
-            eventUpdater.publishedUpdate(eventData.getId());
+            eventUpdater.publishedUpdate(eventData.getEventId());
         } catch (Exception e) {
             log.error("event send fail", e);
             throw e;
