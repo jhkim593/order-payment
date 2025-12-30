@@ -4,6 +4,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import jhkim593.orderpayment.order.adapter.database.jpa.OrderJpaRepository;
 import jhkim593.orderpayment.order.application.required.OrderRepository;
 import jhkim593.orderpayment.order.domain.Order;
+import jhkim593.orderpayment.order.domain.OrderStatus;
 import jhkim593.orderpayment.order.domain.QOrder;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
@@ -41,5 +42,21 @@ public class OrderDBRepository implements OrderRepository {
         }
 
         return result;
+    }
+
+    @Override
+    public void successOrderIfPending(Long orderId) {
+        QOrder order = QOrder.order;
+
+        int result = (int) jpaQueryFactory
+                .update(order)
+                .set(order.status, OrderStatus.SUCCESS)
+                .where(order.id.eq(orderId)
+                        .and(order.status.eq(OrderStatus.PENDING)))
+                .execute();
+
+        if(result == 0){
+            throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
+        }
     }
 }

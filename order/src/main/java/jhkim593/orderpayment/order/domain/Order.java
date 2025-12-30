@@ -78,7 +78,7 @@ public class Order {
         this.status = OrderStatus.CANCEL;
     }
 
-    private boolean isComplete() {
+    public boolean isComplete() {
         return OrderStatus.SUCCESS.equals(status)
                 || OrderStatus.FAIL.equals(status)
                 || OrderStatus.CANCEL.equals(status);

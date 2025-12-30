@@ -74,8 +74,10 @@ public class OrderTransactionManager {
     @Transactional
     public void success(Long orderId) {
         Order order = orderRepository.find(orderId);
-        order.success();
-        orderRepository.save(order);
+        if (order.isComplete()) {
+            return;
+        }
+        orderRepository.successOrderIfPending(orderId);
         eventPublisher.orderComplete(order);
     }
 
