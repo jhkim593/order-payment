@@ -3,9 +3,9 @@ spring:
     name: order-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/order
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://localhost:30034/order
+    username: root
+    password: a1234567!
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -23,10 +23,6 @@ spring:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: order-service-group
-
-kafka:
-  topic:
-    payment: payment
 
 server:
   port: 8081

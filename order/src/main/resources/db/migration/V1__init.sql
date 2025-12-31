@@ -41,7 +41,7 @@ VALUES ('CREDIT', '크레딧 100', '100 크레딧 상품', 10000, NOW(), NOW()),
        ('CREDIT', '크레딧 500', '500 크레딧 상품', 45000, NOW(), NOW()),
        ('CREDIT', '크레딧 1000', '1000 크레딧 상품', 80000, NOW(), NOW());
 
-INSERT INTO credit_products (id, credit_amount, validity_days)
-VALUES (1, 100, 30),
-       (2, 500, 30),
-       (3, 1000, 60);
+INSERT INTO credit_products (id, credit_amount)
+VALUES (1, 100),
+       (2, 500),
+       (3, 1000);
