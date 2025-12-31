@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class PaymentClientConfig {
 
-    @Value("${endpoints.payment-service}")
+    @Value("${endpoints.payment-service:http://localhost:8080}")
     private String paymentServiceUrl;
 
     private final Feign.Builder feignBuilder;
