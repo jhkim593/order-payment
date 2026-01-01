@@ -18,7 +18,7 @@ public class PaymentSuccessEventHandler implements EventHandler<PaymentSuccessEv
     @Override
     public void handle(EventData<PaymentSuccessEventPayload> eventData) {
         try {
-            orderUpdater.successOrder(eventData.getPayload().getOrderId());
+            orderUpdater.succeededOrder(eventData.getPayload().getOrderId());
         } catch (OrderException e) {
             if (ErrorCode.ORDER_ALREADY_COMPLETED.equals(e.getErrorCode())) {
                 return;

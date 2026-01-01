@@ -1,5 +1,6 @@
 package jhkim593.orderpayment.order.application.event;
 
+import jhkim593.orderpayment.common.core.event.payload.CreditOrderCancelSucceedEventPayload;
 import jhkim593.orderpayment.common.core.event.payload.CreditOrderCompleteEventPayload;
 import jhkim593.orderpayment.common.core.snowflake.IdGenerator;
 import jhkim593.orderpayment.order.domain.*;
@@ -31,6 +32,31 @@ public class InternalEventPublisher {
                 new CreditOrderCompleteEvent(
                         idGenerator.getId(),
                         new CreditOrderCompleteEventPayload(
+                                order.getUserId(),
+                                order.getId(),
+                                creditProduct.getCreditAmount()
+                        )
+                )
+        );
+    }
+
+    public void orderCanceled(Order order) {
+        order.getOrderProducts().stream()
+                .map(OrderProduct::getProduct)
+                .forEach(product -> publishCancelEventForProduct(order, product));
+    }
+
+    private void publishCancelEventForProduct(Order order, Product product) {
+        if (product instanceof CreditProduct creditProduct) {
+            publishCreditCancelSucceedEvent(order, creditProduct);
+        }
+    }
+
+    private void publishCreditCancelSucceedEvent(Order order, CreditProduct creditProduct) {
+        eventPublisher.publishEvent(
+                new CreditOrderCancelSucceedEvent(
+                        idGenerator.getId(),
+                        new CreditOrderCancelSucceedEventPayload(
                                 order.getUserId(),
                                 order.getId(),
                                 creditProduct.getCreditAmount()

@@ -4,6 +4,13 @@ import jhkim593.orderpayment.order.domain.dto.OrderCreateRequest;
 
 public interface OrderUpdater {
     void processOrder(OrderCreateRequest request);
-    void successOrder(Long id);
-    void failOrder(Long id);
+
+    void cancelOrder(Long orderId);
+
+    void canceledOrder(Long orderId);
+
+    void cancelFailedOrder(Long orderId);
+
+    void succeededOrder(Long id);
+    void failedOrder(Long id);
 }

@@ -14,6 +14,8 @@ import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
 
@@ -44,12 +46,13 @@ public class KafkaEventListener {
         }
     }
 
-//    @DltHandler
-//    public void handleDlt(String message,
-//                          @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-//        // DLQ로 들어온 메시지에 대한 최종 처리 로직
-//        log.error("DLT Received :: Topic: {}, Event: {}", topic, event);
-//        // e.g., 데이터베이스에 실패 로그 기록, 관리자에게 알림 발송 등
-//        failedEventRepository.save(new FailedEvent(topic, event));
-//    }
+    @DltHandler
+    public void handleDlt(
+            String message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            @Header(value = KafkaHeaders.EXCEPTION_MESSAGE, required = false) String exceptionMessage
+    ) {
+        log.error("DLT message received - Topic: {}, Exception: {}, Message: {}",
+                topic, exceptionMessage, message);
+    }
 }

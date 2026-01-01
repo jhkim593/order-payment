@@ -58,21 +58,21 @@ public class OrderTransactionManager {
 
     @Async
     @Transactional
-    public void success(Order order) {
-        order.success();
+    public void succeeded(Order order) {
+        order.succeeded();
         orderRepository.save(order);
         eventPublisher.orderComplete(order);
     }
 
     @Async
     @Transactional
-    public void fail(Order order) {
-        order.fail();
+    public void failed(Order order) {
+        order.failed();
         orderRepository.save(order);
     }
 
     @Transactional
-    public void success(Long orderId) {
+    public void succeeded(Long orderId) {
         Order order = orderRepository.find(orderId);
         if (order.isComplete()) {
             return;
@@ -82,9 +82,31 @@ public class OrderTransactionManager {
     }
 
     @Transactional
-    public void fail(Long orderId) {
+    public void failed(Long orderId) {
         Order order = orderRepository.find(orderId);
-        order.fail();
+        order.failed();
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void canceling(Long orderId) {
+        Order order = orderRepository.find(orderId);
+        order.canceling();
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void cancelSucceeded(Long orderId) {
+        Order order = orderRepository.find(orderId);
+        order.cancelSucceeded();
+        orderRepository.save(order);
+        eventPublisher.orderCanceled(order);
+    }
+
+    @Transactional
+    public void cancelFailed(Long orderId) {
+        Order order = orderRepository.find(orderId);
+        order.cancelFailed();
         orderRepository.save(order);
     }
 }

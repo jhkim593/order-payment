@@ -2,7 +2,9 @@ package jhkim593.orderpayment.order.domain;
 
 public enum OrderStatus {
     PENDING,
-    FAIL,
-    SUCCESS,
-    CANCEL
+    FAILED,
+    SUCCEEDED,
+    CANCELING,
+    CANCEL_SUCCEEDED,
+    CANCEL_FAILED
 }

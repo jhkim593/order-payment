@@ -50,7 +50,7 @@ public class OrderDBRepository implements OrderRepository {
 
         int result = (int) jpaQueryFactory
                 .update(order)
-                .set(order.status, OrderStatus.SUCCESS)
+                .set(order.status, OrderStatus.SUCCEEDED)
                 .where(order.id.eq(orderId)
                         .and(order.status.eq(OrderStatus.PENDING)))
                 .execute();

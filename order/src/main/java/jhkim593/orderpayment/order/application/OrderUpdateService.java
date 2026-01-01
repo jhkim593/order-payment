@@ -32,20 +32,57 @@ public class OrderUpdateService implements OrderUpdater {
         try {
             paymentClient.billingKeyPayment(paymentRequest);
 
-            orderTransactionManager.success(order);
+            orderTransactionManager.succeeded(order);
             log.info("Payment success and order completed. orderId={}", order.getId());
         } catch (Exception e) {
-            orderTransactionManager.fail(order);
+            orderTransactionManager.failed(order);
         }
     }
 
     @Override
-    public void successOrder(Long id){
-        orderTransactionManager.success(id);
+    public void cancelOrder(Long orderId) {
+        try {
+            orderTransactionManager.canceling(orderId);
+
+            paymentClient.cancelPayment(orderId);
+
+            orderTransactionManager.cancelSucceeded(orderId);
+
+            log.info("Order cancelled successfully. orderId={}", orderId);
+        } catch (Exception e) {
+            log.error("Failed to cancel order. orderId={}", orderId, e);
+            throw e;
+        }
     }
 
     @Override
-    public void failOrder(Long id){
-        orderTransactionManager.fail(id);
+    public void canceledOrder(Long orderId) {
+        try {
+            orderTransactionManager.cancelSucceeded(orderId);
+            log.info("Order cancelled successfully. orderId={}", orderId);
+        } catch (Exception e) {
+            log.error("Failed to cancel order. orderId={}", orderId, e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void cancelFailedOrder(Long orderId) {
+        try {
+            orderTransactionManager.cancelFailed(orderId);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+
+    @Override
+    public void succeededOrder(Long id){
+        orderTransactionManager.succeeded(id);
+    }
+
+    @Override
+    public void failedOrder(Long id){
+        orderTransactionManager.failed(id);
     }
 }

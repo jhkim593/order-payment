@@ -57,34 +57,54 @@ public class Order {
         this.orderProducts.add(orderProduct);
     }
 
-    public void success() {
+    public void succeeded() {
         if(isComplete()){
             throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
         }
-        this.status = OrderStatus.SUCCESS;
+        this.status = OrderStatus.SUCCEEDED;
     }
 
-    public void fail() {
+    public void failed() {
         if(isComplete()){
             throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
         }
-        this.status = OrderStatus.FAIL;
+        this.status = OrderStatus.FAILED;
     }
 
-    public void cancel() {
+    public void canceling() {
         if(!isSuccess()){
             throw new OrderException(ErrorCode.ORDER_NOT_SUCCEEDED);
         }
-        this.status = OrderStatus.CANCEL;
+        this.status = OrderStatus.CANCELING;
+    }
+
+    public void cancelSucceeded() {
+        if(OrderStatus.CANCEL_SUCCEEDED.equals(status)){
+            throw new OrderException(ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED);
+        }
+        this.status = OrderStatus.CANCEL_SUCCEEDED;
+    }
+
+    public void cancelFailed() {
+        if(isCancelComplete()){
+            throw  new OrderException(ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED);
+        }
+        this.status = OrderStatus.CANCEL_SUCCEEDED;
+    }
+
+    public boolean isCancelComplete() {
+        return OrderStatus.CANCEL_SUCCEEDED.equals(status)
+                || OrderStatus.CANCEL_FAILED.equals(status);
     }
 
     public boolean isComplete() {
-        return OrderStatus.SUCCESS.equals(status)
-                || OrderStatus.FAIL.equals(status)
-                || OrderStatus.CANCEL.equals(status);
+        return OrderStatus.SUCCEEDED.equals(status)
+                || OrderStatus.FAILED.equals(status)
+                || OrderStatus.CANCELING.equals(status)
+                || OrderStatus.CANCEL_SUCCEEDED.equals(status);
     }
 
     private boolean isSuccess(){
-        return OrderStatus.SUCCESS.equals(status);
+        return OrderStatus.SUCCEEDED.equals(status);
     }
 }
