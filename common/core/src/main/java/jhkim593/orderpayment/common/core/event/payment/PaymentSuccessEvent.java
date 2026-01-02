@@ -1,16 +1,16 @@
-package jhkim593.orderpayment.payment.domain.event;
+package jhkim593.orderpayment.common.core.event.payment;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jhkim593.orderpayment.common.core.event.EventData;
+import jhkim593.orderpayment.common.core.event.EventType;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentSuccessEventPayload;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class PaymentSuccessEvent {
-    private Long orderId;
-
-    public static PaymentSuccessEvent create(Long orderId) {
-        return new PaymentSuccessEvent(orderId);
+public class PaymentSuccessEvent extends EventData<PaymentSuccessEventPayload> {
+    public PaymentSuccessEvent(Long eventId, PaymentSuccessEventPayload payload) {
+        super(
+                eventId,
+                payload.getOrderId(),
+                EventType.PAYMENT_SUCCESS,
+                payload
+        );
     }
 }

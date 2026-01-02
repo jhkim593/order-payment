@@ -3,7 +3,7 @@ package jhkim593.orderpayment.common.outbox.domain;
 import jakarta.persistence.*;
 import jhkim593.orderpayment.common.core.event.EventData;
 import jhkim593.orderpayment.common.core.event.EventType;
-import jhkim593.orderpayment.common.core.event.payload.EventPayload;
+import jhkim593.orderpayment.common.core.event.EventPayload;
 import jhkim593.orderpayment.common.core.util.DataSerializer;
 import lombok.*;
 

@@ -2,7 +2,7 @@ package jhkim593.orderpayment.order.adapter.event.handler;
 
 import jhkim593.orderpayment.common.core.event.EventData;
 import jhkim593.orderpayment.common.core.event.EventType;
-import jhkim593.orderpayment.common.core.event.payload.PaymentCancelFailEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelFailEventPayload;
 import jhkim593.orderpayment.order.adapter.event.EventHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,5 +1,6 @@
-package jhkim593.orderpayment.common.core.event.payload;
+package jhkim593.orderpayment.common.core.event.payment.payload;
 
+import jhkim593.orderpayment.common.core.event.EventPayload;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -25,7 +25,6 @@ public class OrderTransactionManager {
 
     @Transactional
     public Order createOrder(OrderCreateRequest request) {
-        // 1. 상품 조회
         List<Long> productIds = request.getItems().stream()
                 .map(OrderCreateRequest.OrderItemRequest::getProductId)
                 .collect(Collectors.toList());
@@ -34,15 +33,12 @@ public class OrderTransactionManager {
         Map<Long, Product> productMap = products.stream()
                 .collect(Collectors.toMap(Product::getId, p -> p));
 
-        // 2. 총 금액 계산 (request의 price 합산)
         int totalAmount = request.getItems().stream()
                 .mapToInt(item -> item.getPrice() * item.getQuantity())
                 .sum();
 
-        // 3. Order 생성
         Order order = Order.create(request.getUserId(), totalAmount);
 
-        // 4. OrderProduct 생성
         for (OrderCreateRequest.OrderItemRequest item : request.getItems()) {
             Product product = productMap.get(item.getProductId());
             OrderProduct orderProduct = OrderProduct.create(

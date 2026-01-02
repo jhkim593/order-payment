@@ -1,8 +1,6 @@
 package jhkim593.orderpayment.common.outbox.application;
 
 import jhkim593.orderpayment.common.core.event.EventData;
-import jhkim593.orderpayment.common.core.event.EventType;
-import jhkim593.orderpayment.common.core.event.payload.EventPayload;
 import jhkim593.orderpayment.common.outbox.application.provided.EventUpdater;
 import jhkim593.orderpayment.common.outbox.domain.OutboxEvent;
 import jhkim593.orderpayment.common.outbox.application.required.EventRepository;

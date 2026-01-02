@@ -1,12 +1,11 @@
 package jhkim593.orderpayment.common.core.event;
 
-import jhkim593.orderpayment.common.core.event.payload.CreditOrderCancelSucceedEventPayload;
-import jhkim593.orderpayment.common.core.event.payload.CreditOrderCompleteEventPayload;
-import jhkim593.orderpayment.common.core.event.payload.EventPayload;
-import jhkim593.orderpayment.common.core.event.payload.PaymentCancelFailEventPayload;
-import jhkim593.orderpayment.common.core.event.payload.PaymentCancelSuccessEventPayload;
-import jhkim593.orderpayment.common.core.event.payload.PaymentFailEventPayload;
-import jhkim593.orderpayment.common.core.event.payload.PaymentSuccessEventPayload;
+import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderCancelSucceedEventPayload;
+import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderCompleteEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelFailEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelSuccessEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentFailEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentSuccessEventPayload;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package jhkim593.orderpayment.payment.application.service;
 
-import jhkim593.orderpayment.payment.application.event.EventPublisher;
+import jhkim593.orderpayment.payment.application.event.InternalEventPublisher;
 import jhkim593.orderpayment.payment.application.required.*;
 import jhkim593.orderpayment.payment.domain.*;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class PaymentTransactionManager {
     private final PaymentRepository paymentRepository;
-    private final EventPublisher eventPublisher;
+    private final InternalEventPublisher eventPublisher;
 
     @Async
     @Transactional
@@ -23,7 +23,7 @@ public class PaymentTransactionManager {
         payment.paymentSuccess(pgTxId, paidAt);
         paymentRepository.save(payment);
 
-        eventPublisher.paymentSuccessEventPublish(payment.getOrderId());
+        eventPublisher.paymentSuccessEventPublish(payment);
     }
 
     @Async
@@ -32,7 +32,7 @@ public class PaymentTransactionManager {
         payment.paymentFail();
         paymentRepository.save(payment);
 
-        eventPublisher.paymentFailEventPublish(payment.getOrderId());
+        eventPublisher.paymentFailEventPublish(payment);
     }
 
     @Async
@@ -41,7 +41,7 @@ public class PaymentTransactionManager {
         payment.paymentCancelFail();
         paymentRepository.save(payment);
 
-        eventPublisher.paymentFailEventPublish(payment.getOrderId());
+        eventPublisher.paymentFailEventPublish(payment);
     }
 
     @Async
@@ -50,7 +50,7 @@ public class PaymentTransactionManager {
         payment.paymentFail();
         paymentRepository.save(payment);
 
-        eventPublisher.paymentFailEventPublish(payment.getOrderId());
+        eventPublisher.paymentFailEventPublish(payment);
     }
 
     @Transactional
@@ -62,6 +62,12 @@ public class PaymentTransactionManager {
     @Transactional
     public void paymentUnknown(Payment payment) {
         payment.paymentUnknown();
+        paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public void paymentCancelUnknown(Payment payment) {
+        payment.paymentCancelUnknown();
         paymentRepository.save(payment);
     }
 }

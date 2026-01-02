@@ -21,8 +21,8 @@ public class PortOneRequestManager {
     private final PaymentTransactionManager transactionManager;
 
     @Retryable(
-        maxAttempts = 5,
-        backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 30000),
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 10000),
         recover = "recoverPayment"
     )
     public PortOneBillingKeyPaymentResponseDto billingKeyPayment(Payment payment, PortOneBillingKeyPaymentRequestDto request) {
@@ -36,9 +36,9 @@ public class PortOneRequestManager {
     }
 
     @Retryable(
-            maxAttempts = 5,
-            backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 30000),
-            recover = "recoverPayment"
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 10000),
+            recover = "recoverCancelPayment"
     )
     public PortOneCancelPaymentResponseDto cancelPayment(Payment payment, PortOneCancelPaymentRequestDto request) {
 
@@ -52,7 +52,11 @@ public class PortOneRequestManager {
 
     @Recover
     public void recoverPayment(Exception e, Payment payment) {
-        payment.paymentUnknown();
         transactionManager.paymentUnknown(payment);
+    }
+
+    @Recover
+    public void recoverPaymentCancel(Exception e, Payment payment) {
+        transactionManager.paymentCancelUnknown(payment);
     }
 }

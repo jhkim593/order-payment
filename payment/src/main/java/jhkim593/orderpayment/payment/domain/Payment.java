@@ -109,4 +109,7 @@ public class Payment {
     public void paymentUnknown() {
         this.status = PaymentStatus.UNKNOWN;
     }
+    public void paymentCancelUnknown() {
+        this.status = PaymentStatus.UNKNOWN;
+    }
 }

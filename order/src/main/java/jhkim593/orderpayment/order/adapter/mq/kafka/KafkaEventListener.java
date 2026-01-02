@@ -1,19 +1,14 @@
 package jhkim593.orderpayment.order.adapter.mq.kafka;
 
 import jhkim593.orderpayment.common.core.event.EventData;
-import jhkim593.orderpayment.common.core.event.EventType;
 import jhkim593.orderpayment.common.core.event.Topic;
-import jhkim593.orderpayment.common.core.event.payload.EventPayload;
-import jhkim593.orderpayment.common.core.event.payload.PaymentFailEventPayload;
-import jhkim593.orderpayment.common.core.event.payload.PaymentSuccessEventPayload;
+import jhkim593.orderpayment.common.core.event.EventPayload;
 import jhkim593.orderpayment.order.adapter.event.EventHandlerFactory;
-import jhkim593.orderpayment.order.application.OrderUpdateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;

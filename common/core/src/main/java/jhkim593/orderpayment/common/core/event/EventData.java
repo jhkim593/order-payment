@@ -1,6 +1,5 @@
 package jhkim593.orderpayment.common.core.event;
 
-import jhkim593.orderpayment.common.core.event.payload.EventPayload;
 import jhkim593.orderpayment.common.core.util.DataSerializer;
 import lombok.Getter;
 

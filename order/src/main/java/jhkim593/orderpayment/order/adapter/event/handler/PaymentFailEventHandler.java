@@ -2,9 +2,8 @@ package jhkim593.orderpayment.order.adapter.event.handler;
 
 import jhkim593.orderpayment.common.core.event.EventData;
 import jhkim593.orderpayment.common.core.event.EventType;
-import jhkim593.orderpayment.common.core.event.payload.PaymentFailEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentFailEventPayload;
 import jhkim593.orderpayment.order.adapter.event.EventHandler;
-import jhkim593.orderpayment.order.application.OrderTransactionManager;
 import jhkim593.orderpayment.order.application.provided.OrderUpdater;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
