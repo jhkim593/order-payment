@@ -7,7 +7,7 @@ public interface OrderUpdater {
 
     void cancelOrder(Long orderId);
 
-    void canceledOrder(Long orderId);
+    void cancelSucceededOrder(Long orderId);
 
     void cancelFailedOrder(Long orderId);
 

@@ -4,7 +4,6 @@ import jhkim593.orderpayment.common.core.event.EventData;
 import jhkim593.orderpayment.common.core.event.EventType;
 import jhkim593.orderpayment.common.core.event.payload.PaymentCancelSuccessEventPayload;
 import jhkim593.orderpayment.order.adapter.event.EventHandler;
-import jhkim593.orderpayment.order.application.OrderTransactionManager;
 import jhkim593.orderpayment.order.application.provided.OrderUpdater;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
@@ -22,7 +21,7 @@ public class PaymentCancelSuccessEventHandler implements EventHandler<PaymentCan
     public void handle(EventData<PaymentCancelSuccessEventPayload> eventData) {
         try {
             Long orderId = eventData.getPayload().getOrderId();
-            orderUpdater.canceledOrder(orderId);
+            orderUpdater.cancelSucceededOrder(orderId);
             log.info("Payment cancel success handled. orderId={}", orderId);
         } catch (OrderException e) {
             if (ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED.equals(e.getErrorCode())) {

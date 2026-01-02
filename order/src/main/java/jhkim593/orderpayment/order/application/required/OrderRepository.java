@@ -6,5 +6,4 @@ public interface OrderRepository {
     Order save(Order order);
     Order find(Long id);
     Order findByUserId(Long userId);
-    void successOrderIfPending(Long orderId);
 }

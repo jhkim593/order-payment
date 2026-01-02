@@ -43,20 +43,4 @@ public class OrderDBRepository implements OrderRepository {
 
         return result;
     }
-
-    @Override
-    public void successOrderIfPending(Long orderId) {
-        QOrder order = QOrder.order;
-
-        int result = (int) jpaQueryFactory
-                .update(order)
-                .set(order.status, OrderStatus.SUCCEEDED)
-                .where(order.id.eq(orderId)
-                        .and(order.status.eq(OrderStatus.PENDING)))
-                .execute();
-
-        if(result == 0){
-            throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
-        }
-    }
 }

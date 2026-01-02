@@ -58,27 +58,26 @@ public class OrderTransactionManager {
 
     @Async
     @Transactional
-    public void succeeded(Order order) {
+    public void succeededAsync(Long orderId) {
+        Order order = orderRepository.find(orderId);
         order.succeeded();
         orderRepository.save(order);
-        eventPublisher.orderComplete(order);
-    }
-
-    @Async
-    @Transactional
-    public void failed(Order order) {
-        order.failed();
-        orderRepository.save(order);
+        eventPublisher.orderSucceeded(order);
     }
 
     @Transactional
     public void succeeded(Long orderId) {
         Order order = orderRepository.find(orderId);
-        if (order.isComplete()) {
-            return;
-        }
-        orderRepository.successOrderIfPending(orderId);
-        eventPublisher.orderComplete(order);
+        order.succeeded();
+        eventPublisher.orderSucceeded(order);
+    }
+
+    @Async
+    @Transactional
+    public void failedAsync(Long orderId) {
+        Order order = orderRepository.find(orderId);
+        order.failed();
+        orderRepository.save(order);
     }
 
     @Transactional

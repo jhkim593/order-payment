@@ -31,11 +31,10 @@ public class OrderUpdateService implements OrderUpdater {
 
         try {
             paymentClient.billingKeyPayment(paymentRequest);
-
-            orderTransactionManager.succeeded(order);
+            orderTransactionManager.succeededAsync(order.getId());
             log.info("Payment success and order completed. orderId={}", order.getId());
         } catch (Exception e) {
-            orderTransactionManager.failed(order);
+            orderTransactionManager.failedAsync(order.getId());
         }
     }
 
@@ -56,7 +55,7 @@ public class OrderUpdateService implements OrderUpdater {
     }
 
     @Override
-    public void canceledOrder(Long orderId) {
+    public void cancelSucceededOrder(Long orderId) {
         try {
             orderTransactionManager.cancelSucceeded(orderId);
             log.info("Order cancelled successfully. orderId={}", orderId);

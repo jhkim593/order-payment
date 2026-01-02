@@ -15,13 +15,19 @@ public class InternalEventPublisher {
     private final ApplicationEventPublisher eventPublisher;
     private final IdGenerator idGenerator;
 
-    public void orderComplete(Order order) {
+    public void orderSucceeded(Order order) {
         order.getOrderProducts().stream()
                 .map(OrderProduct::getProduct)
-                .forEach(product -> publishEventForProduct(order, product));
+                .forEach(product -> publishSucceededEventForProduct(order, product));
     }
 
-    private void publishEventForProduct(Order order, Product product) {
+    public void orderCanceled(Order order) {
+        order.getOrderProducts().stream()
+                .map(OrderProduct::getProduct)
+                .forEach(product -> publishCancelEventForProduct(order, product));
+    }
+
+    private void publishSucceededEventForProduct(Order order, Product product) {
         if (product instanceof CreditProduct creditProduct) {
             publishCreditOrderCompleteEvent(order, creditProduct);
         }
@@ -38,12 +44,6 @@ public class InternalEventPublisher {
                         )
                 )
         );
-    }
-
-    public void orderCanceled(Order order) {
-        order.getOrderProducts().stream()
-                .map(OrderProduct::getProduct)
-                .forEach(product -> publishCancelEventForProduct(order, product));
     }
 
     private void publishCancelEventForProduct(Order order, Product product) {
