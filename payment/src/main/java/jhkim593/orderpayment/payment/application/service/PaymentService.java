@@ -3,6 +3,7 @@ package jhkim593.orderpayment.payment.application.service;
 import jhkim593.orderpayment.payment.application.provided.PaymentMethodFinder;
 import jhkim593.orderpayment.payment.application.required.IdGenerator;
 import jhkim593.orderpayment.payment.application.required.PaymentRepository;
+import jhkim593.orderpayment.payment.application.required.PortOneApi;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentMethod;
 import jhkim593.orderpayment.payment.domain.dto.BillingKeyPaymentRequestDto;
@@ -19,7 +20,7 @@ public class PaymentService {
     private final PaymentMethodFinder paymentMethodFinder;
     private final PaymentRepository paymentRepository;
     private final IdGenerator idGenerator;
-    private final PortOneRequestManager portOneRequestManager;
+    private final PortOneApi portOneApi;
     private final PaymentTransactionManager paymentTransactionManager;
 
     public void billingKeyPayment(BillingKeyPaymentRequestDto request) {
@@ -33,7 +34,7 @@ public class PaymentService {
 
         PortOneBillingKeyPaymentResponseDto response = null;
         try {
-            response = portOneRequestManager.billingKeyPayment(payment, clientRequest);
+            response = portOneApi.billingKeyPayment(payment.getId(), clientRequest);
         } catch (PortOneApiException e) {
             paymentTransactionManager.updatePaymentFail(payment,e);
             throw e;

@@ -10,7 +10,6 @@ import jhkim593.orderpayment.payment.domain.QPayment;
 import jhkim593.orderpayment.payment.domain.error.ErrorCode;
 import jhkim593.orderpayment.payment.domain.error.PaymentException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -28,7 +27,7 @@ public class PaymentDBRepository implements PaymentRepository {
     }
 
     @Override
-    public List<Payment> findPendingPayments() {
+    public List<Payment> findPendingPayments(int seconds) {
         QPayment payment = QPayment.payment;
 
         return jpaQueryFactory
@@ -37,15 +36,14 @@ public class PaymentDBRepository implements PaymentRepository {
                 .join(payment.paymentMethod).fetchJoin()
                 .where(
                         statusEq(payment, PaymentStatus.PAYMENT_PENDING),
-                        createdAtBefore(payment, 5)
+                        createdAtBefore(payment, seconds)
                 )
                 .orderBy(payment.id.asc())
                 .limit(100)
                 .fetch();
     }
 
-    @Override
-    public List<Payment> findPendingPaymentSchedules() {
+    public List<Payment> findCancelPendingPayment(int seconds) {
         QPayment payment = QPayment.payment;
 
         return jpaQueryFactory
@@ -54,7 +52,7 @@ public class PaymentDBRepository implements PaymentRepository {
                 .join(payment.paymentMethod).fetchJoin()
                 .where(
                         statusEq(payment, PaymentStatus.CANCEL_PENDING),
-                        createdAtBefore(payment, 15)
+                        createdAtBefore(payment, seconds)
                 )
                 .orderBy(payment.id.asc())
                 .limit(100)

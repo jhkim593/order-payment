@@ -6,8 +6,8 @@ import java.util.List;
 
 public interface PaymentRepository {
     Payment save(Payment payment);
-    List<Payment> findPendingPayments();
-    List<Payment> findPendingPaymentSchedules();
+    List<Payment> findPendingPayments(int seconds);
+    List<Payment> findCancelPendingPayment(int seconds);
     Payment find(Long id);
     Payment findByOrderId(Long orderId);
 }

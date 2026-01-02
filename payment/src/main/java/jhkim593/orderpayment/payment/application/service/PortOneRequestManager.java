@@ -21,8 +21,8 @@ public class PortOneRequestManager {
     private final PaymentTransactionManager transactionManager;
 
     @Retryable(
-        maxAttempts = 3,
-        backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 10000),
+        maxAttempts = 2,
+        backoff = @Backoff(delay = 10000),
         recover = "recoverPayment"
     )
     public PortOneBillingKeyPaymentResponseDto billingKeyPayment(Payment payment, PortOneBillingKeyPaymentRequestDto request) {

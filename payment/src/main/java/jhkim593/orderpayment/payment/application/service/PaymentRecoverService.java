@@ -24,7 +24,7 @@ public class PaymentRecoverService {
             timeUnit = TimeUnit.SECONDS
     )
     public void updatePendingPayments(){
-        List<Payment> pendingPayments = paymentRepository.findPendingPayments();
+        List<Payment> pendingPayments = paymentRepository.findPendingPayments(80);
 
         for (Payment payment : pendingPayments) {
             try {
