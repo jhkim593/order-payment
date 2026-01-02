@@ -35,7 +35,7 @@ public class PaymentDBRepository implements PaymentRepository {
                 .from(payment)
                 .join(payment.paymentMethod).fetchJoin()
                 .where(
-                        statusEq(payment, PaymentStatus.PAYMENT_PENDING),
+                        statusEq(payment, PaymentStatus.PENDING),
                         createdAtBefore(payment, seconds)
                 )
                 .orderBy(payment.id.asc())
@@ -51,7 +51,7 @@ public class PaymentDBRepository implements PaymentRepository {
                 .from(payment)
                 .join(payment.paymentMethod).fetchJoin()
                 .where(
-                        statusEq(payment, PaymentStatus.CANCEL_PENDING),
+                        statusEq(payment, PaymentStatus.CANCELING),
                         createdAtBefore(payment, seconds)
                 )
                 .orderBy(payment.id.asc())

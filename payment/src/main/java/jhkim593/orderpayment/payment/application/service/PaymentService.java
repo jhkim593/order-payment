@@ -36,10 +36,10 @@ public class PaymentService {
         try {
             response = portOneApi.billingKeyPayment(payment.getId(), clientRequest);
         } catch (PortOneApiException e) {
-            paymentTransactionManager.updatePaymentFail(payment,e);
+            paymentTransactionManager.failed(payment,e);
             throw e;
         }
-        paymentTransactionManager.updatePaymentSuccess(payment, response.getPayment().getPgTxId(), response.getPayment().getPaidAt());
+        paymentTransactionManager.succeeded(payment, response.getPayment().getPgTxId(), response.getPayment().getPaidAt());
     }
 
     public void cancelPayment(Long orderId){

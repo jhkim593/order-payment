@@ -38,9 +38,9 @@ public class PaymentRecoverService {
     public void get(Payment payment){
         try {
             PortOneGetPaymentResponseDto response = portOneApi.getPayment(payment.getId());
-            paymentTransactionManager.updatePaymentSuccess(payment, response.getPgTxId(), response.getPaidAt());
+            paymentTransactionManager.succeeded(payment, response.getPgTxId(), response.getPaidAt());
         } catch (PortOneApiException e){
-            paymentTransactionManager.updatePaymentFail(payment, e);
+            paymentTransactionManager.failed(payment, e);
         }
     }
 }

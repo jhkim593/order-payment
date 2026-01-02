@@ -65,29 +65,29 @@ public class Payment {
                 .orderId(request.getOrderId())
                 .orderName(request.getOrderName())
                 .amount(request.getAmount())
-                .status(PaymentStatus.PAYMENT_PENDING)
+                .status(PaymentStatus.PENDING)
                 .retryCount(0)
                 .build();
     }
 
-    public void paymentSuccess(String pgTransactionId, LocalDateTime paidAt) {
-        this.status = PaymentStatus.PAYMENT_SUCCESS;
+    public void succeeded(String pgTransactionId, LocalDateTime paidAt) {
+        this.status = PaymentStatus.SUCCEEDED;
         this.paidAt = paidAt;
         this.pgTransactionId = pgTransactionId;
     }
 
-    public void paymentFail() {
-        this.status = PaymentStatus.PAYMENT_FAIL;
+    public void failed() {
+        this.status = PaymentStatus.FAILED;
     }
 
-    public void paymentCancelSuccess(String pgTransactionId, LocalDateTime paidAt) {
-        this.status = PaymentStatus.CANCEL_SUCCESS;
+    public void cancelSucceeded(String pgTransactionId, LocalDateTime paidAt) {
+        this.status = PaymentStatus.CANCEL_SUCCEEDED;
         this.paidAt = paidAt;
         this.pgTransactionId = pgTransactionId;
     }
 
-    public void paymentCancelFail() {
-        this.status = PaymentStatus.CANCEL_FAIL;
+    public void cancelFailed() {
+        this.status = PaymentStatus.CANCEL_FAILED;
     }
 
     public String billingKey() {
@@ -95,21 +95,11 @@ public class Payment {
         return paymentMethod.getBillingKey();
     }
 
-    public void incrementRetryCount() {
-        this.retryCount++;
-    }
 
-    public boolean payemntCancel(){
-        if(this.status.equals(PaymentStatus.PAYMENT_SUCCESS)){
-            this.status = PaymentStatus.CANCEL_PENDING;
+    public boolean canceling(){
+        if(this.status.equals(PaymentStatus.SUCCEEDED)){
+            this.status = PaymentStatus.CANCELING;
         }
-        throw new PaymentException(ErrorCode.PAYMENT_NOT_COMPLETED);
-    }
-
-    public void paymentUnknown() {
-        this.status = PaymentStatus.UNKNOWN;
-    }
-    public void paymentCancelUnknown() {
-        this.status = PaymentStatus.UNKNOWN;
+        throw new PaymentException(ErrorCode.PAYMENT_NOT_SUCCEEDED);
     }
 }

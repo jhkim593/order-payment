@@ -19,8 +19,8 @@ public class PaymentTransactionManager {
 
     @Async
     @Transactional
-    public void updatePaymentSuccess(Payment payment, String pgTxId, LocalDateTime paidAt) {
-        payment.paymentSuccess(pgTxId, paidAt);
+    public void succeeded(Payment payment, String pgTxId, LocalDateTime paidAt) {
+        payment.succeeded(pgTxId, paidAt);
         paymentRepository.save(payment);
 
         eventPublisher.paymentSuccessEventPublish(payment);
@@ -28,8 +28,24 @@ public class PaymentTransactionManager {
 
     @Async
     @Transactional
-    public void updatePaymentFail(Payment payment, PortOneApiException exception) {
-        payment.paymentFail();
+    public void failed(Payment payment, PortOneApiException exception) {
+        payment.failed();
+        paymentRepository.save(payment);
+
+        eventPublisher.paymentFailEventPublish(payment);
+    }
+
+    @Transactional
+    public void canceling(Long orderId) {
+        Payment payment = paymentRepository.findByOrderId(orderId);
+        payment.canceling();
+        paymentRepository.save(payment);
+    }
+
+    @Async
+    @Transactional
+    public void cancelFailed(Payment payment, PortOneApiException exception) {
+        payment.cancelFailed();
         paymentRepository.save(payment);
 
         eventPublisher.paymentFailEventPublish(payment);
@@ -37,37 +53,10 @@ public class PaymentTransactionManager {
 
     @Async
     @Transactional
-    public void updateCancelFail(Payment payment, PortOneApiException exception) {
-        payment.paymentCancelFail();
+    public void cancelSucceeded(Payment payment, String pgTxId, LocalDateTime paidAt) {
+        payment.cancelSucceeded(pgTxId, paidAt);
         paymentRepository.save(payment);
 
-        eventPublisher.paymentFailEventPublish(payment);
-    }
-
-    @Async
-    @Transactional
-    public void updateCancelSuccess(Payment payment, PortOneApiException exception) {
-        payment.paymentFail();
-        paymentRepository.save(payment);
-
-        eventPublisher.paymentFailEventPublish(payment);
-    }
-
-    @Transactional
-    public void incrementRetryCount(Payment payment) {
-        payment.incrementRetryCount();
-        paymentRepository.save(payment);
-    }
-
-    @Transactional
-    public void paymentUnknown(Payment payment) {
-        payment.paymentUnknown();
-        paymentRepository.save(payment);
-    }
-
-    @Transactional
-    public void paymentCancelUnknown(Payment payment) {
-        payment.paymentCancelUnknown();
-        paymentRepository.save(payment);
+        eventPublisher.paymentSuccessEventPublish(payment);
     }
 }
