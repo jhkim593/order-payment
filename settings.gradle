@@ -1,5 +1,8 @@
-rootProject.name = 'payment'
+rootProject.name = 'order-payment'
 
 include 'common'
 include 'common:outbox'
 include 'common:core'
+include 'common:client'
+include 'payment'
+include 'order'
