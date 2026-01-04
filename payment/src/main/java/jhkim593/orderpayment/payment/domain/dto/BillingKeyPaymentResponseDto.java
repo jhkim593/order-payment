@@ -12,7 +12,7 @@ public class BillingKeyPaymentResponseDto {
     private Long paymentId;
     private LocalDateTime paidAt;
 
-    public static BillingKeyPaymentResponseDto from(Payment payment) {
+    public static BillingKeyPaymentResponseDto create(Payment payment) {
         return BillingKeyPaymentResponseDto.builder()
                 .paymentId(payment.getPaymentId())
                 .paidAt(payment.getPaidAt())

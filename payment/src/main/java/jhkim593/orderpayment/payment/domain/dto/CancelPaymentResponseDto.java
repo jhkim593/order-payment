@@ -12,7 +12,7 @@ public class CancelPaymentResponseDto {
     private Long paymentId;
     private LocalDateTime cancelledAt;
 
-    public static CancelPaymentResponseDto from(Payment payment) {
+    public static CancelPaymentResponseDto create(Payment payment) {
         return CancelPaymentResponseDto.builder()
                 .paymentId(payment.getPaymentId())
                 .cancelledAt(payment.getCancelledAt())
