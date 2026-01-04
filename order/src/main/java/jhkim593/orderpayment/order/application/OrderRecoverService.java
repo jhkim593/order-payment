@@ -45,7 +45,7 @@ public class OrderRecoverService {
 
         for (Order order : cancelingOrders) {
             try {
-                checkCancelOrderStatus(order);
+                checkCancelPaymentStatus(order);
             } catch (Exception e) {
                 log.error("Failed to check cancel order status. orderId={}", order.getId(), e);
             }
@@ -69,7 +69,7 @@ public class OrderRecoverService {
         }
     }
 
-    private void checkCancelOrderStatus(Order order) {
+    private void checkCancelPaymentStatus(Order order) {
         try {
             PaymentDetailResponseDto payment = paymentClient.getPayment(order.getId());
 
