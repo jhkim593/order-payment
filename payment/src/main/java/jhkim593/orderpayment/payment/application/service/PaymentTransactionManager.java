@@ -1,13 +1,12 @@
 package jhkim593.orderpayment.payment.application.service;
 
-import jhkim593.orderpayment.payment.application.event.InternalEventPublisher;
 import jhkim593.orderpayment.payment.application.provided.PaymentMethodFinder;
-import jhkim593.orderpayment.payment.application.required.*;
-import jhkim593.orderpayment.payment.domain.*;
+import jhkim593.orderpayment.payment.application.required.PaymentRepository;
+import jhkim593.orderpayment.payment.domain.Payment;
+import jhkim593.orderpayment.payment.domain.PaymentMethod;
 import jhkim593.orderpayment.payment.domain.dto.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
