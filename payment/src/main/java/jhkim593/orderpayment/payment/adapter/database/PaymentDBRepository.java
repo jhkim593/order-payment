@@ -36,7 +36,7 @@ public class PaymentDBRepository implements PaymentRepository {
                 .join(payment.paymentMethod).fetchJoin()
                 .where(
                         statusEq(payment, PaymentStatus.PENDING),
-                        createdAtBefore(payment, seconds)
+                        statusUpdatedAtBefore(payment, seconds)
                 )
                 .orderBy(payment.paymentId.asc())
                 .limit(100)
@@ -52,7 +52,7 @@ public class PaymentDBRepository implements PaymentRepository {
                 .join(payment.paymentMethod).fetchJoin()
                 .where(
                         statusEq(payment, PaymentStatus.CANCELING),
-                        createdAtBefore(payment, seconds)
+                        statusUpdatedAtBefore(payment, seconds)
                 )
                 .orderBy(payment.paymentId.asc())
                 .limit(100)
@@ -97,8 +97,8 @@ public class PaymentDBRepository implements PaymentRepository {
         return status != null ? payment.status.eq(status) : null;
     }
 
-    private BooleanExpression createdAtBefore(QPayment payment, int seconds) {
-        return payment.createdAt.lt(LocalDateTime.now().minusSeconds(seconds));
+    private BooleanExpression statusUpdatedAtBefore(QPayment payment, int seconds) {
+        return payment.statusUpdatedAt.lt(LocalDateTime.now().minusSeconds(seconds));
     }
 
 }

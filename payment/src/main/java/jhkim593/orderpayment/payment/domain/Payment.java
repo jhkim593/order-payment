@@ -50,6 +50,9 @@ public class Payment {
     @Column(updatable = false)
     private LocalDateTime cancelledAt;
 
+    @Column(nullable = false)
+    private LocalDateTime statusUpdatedAt;
+
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -67,6 +70,7 @@ public class Payment {
                 .orderId(request.getOrderId())
                 .orderName(request.getOrderName())
                 .status(PaymentStatus.PENDING)
+                .statusUpdatedAt(LocalDateTime.now())
                 .build();
     }
 
@@ -77,6 +81,7 @@ public class Payment {
         this.status = PaymentStatus.SUCCEEDED;
         this.paidAt = paidAt;
         this.pgTransactionId = pgTransactionId;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
     public void failed() {
@@ -84,6 +89,7 @@ public class Payment {
             throw new PaymentException(ErrorCode.PAYMENT_NOT_PENDING);
         }
         this.status = PaymentStatus.FAILED;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
     public void cancelSucceeded(String pgCancellationId, LocalDateTime cancelledAt) {
@@ -93,6 +99,7 @@ public class Payment {
         this.pgCancellationId = pgCancellationId;
         this.cancelledAt = cancelledAt;
         this.status = PaymentStatus.CANCEL_SUCCEEDED;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
     public void cancelFailed() {
@@ -100,6 +107,7 @@ public class Payment {
             throw new PaymentException(ErrorCode.PAYMENT_NOT_CANCELING);
         }
         this.status = PaymentStatus.CANCEL_FAILED;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
     public String billingKey() {
@@ -114,5 +122,6 @@ public class Payment {
             throw new PaymentException(ErrorCode.PAYMENT_NOT_SUCCEEDED);
         }
         this.status = PaymentStatus.CANCELING;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 }
