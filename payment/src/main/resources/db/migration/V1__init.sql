@@ -14,16 +14,18 @@ CREATE TABLE payment_methods
 
 CREATE TABLE payments
 (
-    id                BIGINT PRIMARY KEY,
+    payment_id        BIGSERIAL PRIMARY KEY,
     user_id           BIGINT NOT NULL,
     order_id          BIGINT NOT NULL,
-    order_name        VARCHAR(256),
+    currency          VARCHAR(20),
     payment_method_id BIGINT REFERENCES payment_methods (id),
+    order_name        VARCHAR(256),
     amount            INTEGER      NOT NULL,
     status            VARCHAR(20)  NOT NULL,
     pg_transaction_id VARCHAR(256),
-    retry_count       INTEGER NOT NULL,
+    pg_cancellation_id VARCHAR(256),
     paid_at           TIMESTAMP,
+    cancelled_at      TIMESTAMP,
     created_at        TIMESTAMP    NOT NULL,
     updated_at        TIMESTAMP    NOT NULL
 );
@@ -37,12 +39,12 @@ CREATE UNIQUE INDEX idx_payments_order_status
 CREATE TABLE payment_histories
 (
     id                BIGSERIAL PRIMARY KEY,
-    payment_id        BIGINT REFERENCES payments (id) NOT NULL ,
+    payment_id        BIGINT REFERENCES payments (payment_id) NOT NULL ,
     type              VARCHAR(20)  NOT NULL,
     status            VARCHAR(20)  NOT NULL,
     pg_row_data       TEXT,
     pg_transaction_id VARCHAR(255) NOT NULL,
---     payment_id        BIGINT REFERENCES payments (id),
+--     payment_id        BIGINT REFERENCES payments (payment_id),
 --     credit_plan_id    BIGINT REFERENCES credit_plans (id),
     created_at        TIMESTAMP    NOT NULL
 );
