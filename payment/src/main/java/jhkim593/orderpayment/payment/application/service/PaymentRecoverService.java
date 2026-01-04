@@ -28,19 +28,55 @@ public class PaymentRecoverService {
 
         for (Payment payment : pendingPayments) {
             try {
-                get(payment);
+                checkPaymentStatus(payment);
             } catch (Exception e) {
 
             }
         }
     }
 
-    public void get(Payment payment){
+    @Scheduled(
+            fixedDelay = 10,
+            timeUnit = TimeUnit.SECONDS
+    )
+    public void updateCancelPendingPayments(){
+        List<Payment> pendingPayments = paymentRepository.findCancelPendingPayment(80);
+
+        for (Payment payment : pendingPayments) {
+            try {
+                checkCancelPaymentStatus(payment);
+            } catch (Exception e) {
+
+            }
+        }
+    }
+
+
+    private void checkPaymentStatus(Payment payment){
         try {
-            PortOneGetPaymentResponseDto response = portOneApi.getPayment(payment.getId());
-            paymentTransactionManager.succeeded(payment, response.getPgTxId(), response.getPaidAt());
+            PortOneGetPaymentResponseDto response = portOneApi.getPayment(payment.getPaymentId());
+
+            String status = response.getStatus();
+            if ("PAID".equals(status)) {
+                paymentTransactionManager.succeeded(payment, response.getPgTxId(), response.getPaidAt());
+            } else if ("FAILED".equals(status)) {
+                paymentTransactionManager.failed(payment, null);
+            }
         } catch (PortOneApiException e){
-            paymentTransactionManager.failed(payment, e);
+            if (e.getErrorResponse().getPgCode().equals("PAYMENT_NOT_FOUND")) {
+                paymentTransactionManager.failed(payment, e);
+            }
+        }
+    }
+
+    private void checkCancelPaymentStatus(Payment payment){
+        PortOneGetPaymentResponseDto response = portOneApi.getPayment(payment.getPaymentId());
+
+        String status = response.getStatus();
+        if ("CANCELLED".equals(status)) {
+            paymentTransactionManager.cancelSucceeded(payment, response.getPgTxId(), response.getPaidAt());
+        } else if ("PAID".equals(status)) {
+            paymentTransactionManager.cancelFailed(payment, null);
         }
     }
 }

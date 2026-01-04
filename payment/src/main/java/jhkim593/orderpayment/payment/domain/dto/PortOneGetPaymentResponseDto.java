@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class PortOneGetPaymentResponseDto {
 
+    private String status;
     private LocalDateTime paidAt;
     private String pgTxId;
 }
