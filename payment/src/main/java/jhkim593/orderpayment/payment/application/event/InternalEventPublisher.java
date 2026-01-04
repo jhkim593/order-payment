@@ -20,7 +20,7 @@ public class InternalEventPublisher {
         applicationEventPublisher.publishEvent(
                 new PaymentFailEvent(
                         idGenerator.getId(),
-                        PaymentFailEventPayload.create(payment.getId(), payment.getOrderId())
+                        PaymentFailEventPayload.create(payment.getPaymentId(), payment.getOrderId())
                 )
         );
     }
@@ -29,7 +29,7 @@ public class InternalEventPublisher {
         applicationEventPublisher.publishEvent(
                 new PaymentSuccessEvent(
                         idGenerator.getId(),
-                        PaymentSuccessEventPayload.create(payment.getId(), payment.getOrderId())
+                        PaymentSuccessEventPayload.create(payment.getPaymentId(), payment.getOrderId())
                 )
         );
     }

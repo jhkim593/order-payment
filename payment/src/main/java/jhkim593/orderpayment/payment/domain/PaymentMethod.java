@@ -31,6 +31,7 @@ public class PaymentMethod {
     @Column(name = "payment_detail", columnDefinition = "text")
     private String paymentDetail;
 
+    @Builder.Default
     private Boolean isDefault = false;
 
     @CreationTimestamp

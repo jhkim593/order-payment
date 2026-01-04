@@ -1,7 +1,6 @@
 package jhkim593.orderpayment.payment.application.service;
 
 import jhkim593.orderpayment.payment.application.provided.PaymentMethodFinder;
-import jhkim593.orderpayment.payment.application.required.IdGenerator;
 import jhkim593.orderpayment.payment.application.required.PaymentRepository;
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
 import jhkim593.orderpayment.payment.domain.Payment;
@@ -9,7 +8,6 @@ import jhkim593.orderpayment.payment.domain.PaymentMethod;
 import jhkim593.orderpayment.payment.domain.dto.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.dto.PortOneBillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.dto.PortOneBillingKeyPaymentResponseDto;
-import jhkim593.orderpayment.payment.domain.dto.PortOneCancelPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,14 +17,13 @@ import org.springframework.stereotype.Service;
 public class PaymentService {
     private final PaymentMethodFinder paymentMethodFinder;
     private final PaymentRepository paymentRepository;
-    private final IdGenerator idGenerator;
     private final PortOneApi portOneApi;
     private final PaymentTransactionManager paymentTransactionManager;
 
     public void billingKeyPayment(BillingKeyPaymentRequestDto request) {
         PaymentMethod paymentMethod = paymentMethodFinder.find(request.getPaymentMethodId());
 
-        Payment payment = Payment.create(idGenerator.getId(), paymentMethod, request);
+        Payment payment = Payment.create(paymentMethod, request);
         payment = paymentRepository.save(payment);
 
         PortOneBillingKeyPaymentRequestDto clientRequest =
@@ -34,7 +31,7 @@ public class PaymentService {
 
         PortOneBillingKeyPaymentResponseDto response = null;
         try {
-            response = portOneApi.billingKeyPayment(payment.getId(), clientRequest);
+            response = portOneApi.billingKeyPayment(payment.getPaymentId(), clientRequest);
         } catch (PortOneApiException e) {
             paymentTransactionManager.failed(payment,e);
             throw e;

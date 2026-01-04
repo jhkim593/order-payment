@@ -53,8 +53,8 @@ public class PaymentTransactionManager {
 
     @Async
     @Transactional
-    public void cancelSucceeded(Payment payment, String pgTxId, LocalDateTime paidAt) {
-        payment.cancelSucceeded(pgTxId, paidAt);
+    public void cancelSucceeded(Payment payment, String pgCancellationId, LocalDateTime cancelledAt) {
+        payment.cancelSucceeded(pgCancellationId, cancelledAt);
         paymentRepository.save(payment);
 
         eventPublisher.paymentSuccessEventPublish(payment);

@@ -38,7 +38,7 @@ public class PaymentDBRepository implements PaymentRepository {
                         statusEq(payment, PaymentStatus.PENDING),
                         createdAtBefore(payment, seconds)
                 )
-                .orderBy(payment.id.asc())
+                .orderBy(payment.paymentId.asc())
                 .limit(100)
                 .fetch();
     }
@@ -54,7 +54,7 @@ public class PaymentDBRepository implements PaymentRepository {
                         statusEq(payment, PaymentStatus.CANCELING),
                         createdAtBefore(payment, seconds)
                 )
-                .orderBy(payment.id.asc())
+                .orderBy(payment.paymentId.asc())
                 .limit(100)
                 .fetch();
     }
@@ -66,7 +66,7 @@ public class PaymentDBRepository implements PaymentRepository {
         Payment result = jpaQueryFactory
                 .selectFrom(payment)
                 .join(payment.paymentMethod).fetchJoin()
-                .where(payment.id.eq(id))
+                .where(payment.paymentId.eq(id))
                 .fetchOne();
 
         if (result == null) {

@@ -11,7 +11,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "payments")
 @Getter
 @Builder(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -19,11 +18,14 @@ import java.time.LocalDateTime;
 public class Payment {
 
     @Id
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long paymentId;
 
     private Long userId;
 
     private Long orderId;
+
+    private String currency;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_method_id")
@@ -38,15 +40,15 @@ public class Payment {
     @Column(nullable = false)
     private PaymentStatus status;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Integer retryCount = 0;
-
     private String pgTransactionId;
 
-    @CreationTimestamp
-    @Column(updatable = false, nullable = false)
+    private String pgCancellationId;
+
+    @Column(updatable = false)
     private LocalDateTime paidAt;
+
+    @Column(updatable = false)
+    private LocalDateTime cancelledAt;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
@@ -56,50 +58,61 @@ public class Payment {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public static Payment create(Long id, PaymentMethod paymentMethod, BillingKeyPaymentRequestDto request) {
+    public static Payment create(PaymentMethod paymentMethod, BillingKeyPaymentRequestDto request) {
         return Payment.builder()
-                .id(id)
                 .userId(request.getUserId())
+                .currency(request.getCurrency())
                 .paymentMethod(paymentMethod)
                 .amount(request.getAmount())
                 .orderId(request.getOrderId())
                 .orderName(request.getOrderName())
-                .amount(request.getAmount())
                 .status(PaymentStatus.PENDING)
-                .retryCount(0)
                 .build();
     }
 
     public void succeeded(String pgTransactionId, LocalDateTime paidAt) {
+        if (!this.status.equals(PaymentStatus.PENDING)) {
+            throw new PaymentException(ErrorCode.PAYMENT_NOT_PENDING);
+        }
         this.status = PaymentStatus.SUCCEEDED;
         this.paidAt = paidAt;
         this.pgTransactionId = pgTransactionId;
     }
 
     public void failed() {
+        if (!this.status.equals(PaymentStatus.PENDING)) {
+            throw new PaymentException(ErrorCode.PAYMENT_NOT_PENDING);
+        }
         this.status = PaymentStatus.FAILED;
     }
 
-    public void cancelSucceeded(String pgTransactionId, LocalDateTime paidAt) {
+    public void cancelSucceeded(String pgCancellationId, LocalDateTime cancelledAt) {
+        if (!this.status.equals(PaymentStatus.CANCELING)) {
+            throw new PaymentException(ErrorCode.PAYMENT_NOT_CANCELING);
+        }
+        this.pgCancellationId = pgCancellationId;
+        this.cancelledAt = cancelledAt;
         this.status = PaymentStatus.CANCEL_SUCCEEDED;
-        this.paidAt = paidAt;
-        this.pgTransactionId = pgTransactionId;
     }
 
     public void cancelFailed() {
+        if (!this.status.equals(PaymentStatus.CANCELING)) {
+            throw new PaymentException(ErrorCode.PAYMENT_NOT_CANCELING);
+        }
         this.status = PaymentStatus.CANCEL_FAILED;
     }
 
     public String billingKey() {
-        if (paymentMethod == null) throw new PaymentException(ErrorCode.PAYMENT_METHOD_NOT_FOUND);
+        if (paymentMethod == null) {
+            throw new PaymentException(ErrorCode.PAYMENT_METHOD_NOT_FOUND);
+        }
         return paymentMethod.getBillingKey();
     }
 
-
-    public boolean canceling(){
-        if(this.status.equals(PaymentStatus.SUCCEEDED)){
-            this.status = PaymentStatus.CANCELING;
+    public void canceling(){
+        if(!this.status.equals(PaymentStatus.SUCCEEDED)){
+            throw new PaymentException(ErrorCode.PAYMENT_NOT_SUCCEEDED);
         }
-        throw new PaymentException(ErrorCode.PAYMENT_NOT_SUCCEEDED);
+        this.status = PaymentStatus.CANCELING;
     }
 }
