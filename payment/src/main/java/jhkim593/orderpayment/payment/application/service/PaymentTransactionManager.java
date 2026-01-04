@@ -1,10 +1,10 @@
 package jhkim593.orderpayment.payment.application.service;
 
+import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.application.provided.PaymentMethodFinder;
 import jhkim593.orderpayment.payment.application.required.PaymentRepository;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentMethod;
-import jhkim593.orderpayment.payment.domain.dto.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

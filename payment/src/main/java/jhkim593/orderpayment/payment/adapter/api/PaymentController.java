@@ -1,9 +1,9 @@
 package jhkim593.orderpayment.payment.adapter.api;
 
+import jhkim593.orderpayment.common.core.api.payment.*;
 import jhkim593.orderpayment.payment.application.provided.PaymentFinder;
 import jhkim593.orderpayment.payment.application.provided.PaymentProcessor;
 import jhkim593.orderpayment.payment.domain.Payment;
-import jhkim593.orderpayment.payment.domain.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +17,10 @@ public class PaymentController {
     @PostMapping("/api/v1/payment/billing-key")
     public ResponseEntity<BillingKeyPaymentResponseDto> billingKeyPayment(@RequestBody BillingKeyPaymentRequestDto request) {
         Payment payment = paymentProcessor.billingKeyPayment(request);
-        BillingKeyPaymentResponseDto response = BillingKeyPaymentResponseDto.create(payment);
+        BillingKeyPaymentResponseDto response = BillingKeyPaymentResponseDto.builder()
+                .paymentId(payment.getPaymentId())
+                .paidAt(payment.getPaidAt())
+                .build();
         return ResponseEntity.ok(response);
     }
 
@@ -27,14 +30,35 @@ public class PaymentController {
             @RequestBody CancelPaymentRequestDto request
     ) {
         Payment payment = paymentProcessor.cancelPayment(paymentId, request);
-        CancelPaymentResponseDto response = CancelPaymentResponseDto.create(payment);
+        CancelPaymentResponseDto response = CancelPaymentResponseDto.builder()
+                .paymentId(payment.getPaymentId())
+                .cancelledAt(payment.getCancelledAt())
+                .build();
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/v1/payment/{paymentId}")
     public ResponseEntity<PaymentDetailResponseDto> getPayment(@PathVariable Long paymentId) {
         Payment payment = paymentFinder.getPayment(paymentId);
-        PaymentDetailResponseDto response = PaymentDetailResponseDto.create(payment);
+
+        PaymentDetailResponseDto.PaymentMethodDto paymentMethodDto = null;
+        if (payment.getPaymentMethod() != null) {
+            paymentMethodDto = PaymentDetailResponseDto.PaymentMethodDto.builder()
+                    .pgProvider(payment.getPaymentMethod().getPgProvider().name())
+                    .build();
+        }
+
+        PaymentDetailResponseDto response = PaymentDetailResponseDto.builder()
+                .paymentId(payment.getPaymentId())
+                .orderId(payment.getOrderId())
+                .userId(payment.getUserId())
+                .currency(payment.getCurrency())
+                .paymentMethod(paymentMethodDto)
+                .amount(payment.getAmount())
+                .status(payment.getStatus().name())
+                .paidAt(payment.getPaidAt())
+                .cancelledAt(payment.getCancelledAt())
+                .build();
         return ResponseEntity.ok(response);
     }
 }

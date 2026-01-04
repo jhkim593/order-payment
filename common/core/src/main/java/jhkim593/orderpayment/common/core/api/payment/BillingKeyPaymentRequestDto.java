@@ -1,4 +1,4 @@
-package jhkim593.orderpayment.common.client.payment.dto;
+package jhkim593.orderpayment.common.core.api.payment;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BillingKeyPaymentRequest {
+public class BillingKeyPaymentRequestDto {
     private Long userId;
     private Long orderId;
     private String orderName;
@@ -17,7 +17,7 @@ public class BillingKeyPaymentRequest {
     private Long paymentMethodId;
     private String currency;
 
-    public static BillingKeyPaymentRequest create(
+    public static BillingKeyPaymentRequestDto create(
             Long userId,
             Long orderId,
             String orderName,
@@ -25,7 +25,7 @@ public class BillingKeyPaymentRequest {
             Long paymentMethodId,
             String currency
     ) {
-        return BillingKeyPaymentRequest.builder()
+        return BillingKeyPaymentRequestDto.builder()
                 .userId(userId)
                 .orderId(orderId)
                 .orderName(orderName)

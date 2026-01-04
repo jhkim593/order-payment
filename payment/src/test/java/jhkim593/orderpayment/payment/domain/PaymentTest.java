@@ -1,6 +1,6 @@
 package jhkim593.orderpayment.payment.domain;
 
-import jhkim593.orderpayment.payment.domain.dto.BillingKeyPaymentRequestDto;
+import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.error.ErrorCode;
 import jhkim593.orderpayment.payment.domain.error.PaymentException;
 import org.junit.jupiter.api.Test;

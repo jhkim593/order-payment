@@ -1,4 +1,4 @@
-package jhkim593.orderpayment.payment.domain.dto;
+package jhkim593.orderpayment.common.core.api.payment;
 
 import lombok.Builder;
 import lombok.Getter;

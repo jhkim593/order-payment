@@ -1,5 +1,7 @@
 package jhkim593.orderpayment.payment.application.service;
 
+import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
+import jhkim593.orderpayment.common.core.api.payment.CancelPaymentRequestDto;
 import jhkim593.orderpayment.payment.application.provided.PaymentProcessor;
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
 import jhkim593.orderpayment.payment.domain.Payment;

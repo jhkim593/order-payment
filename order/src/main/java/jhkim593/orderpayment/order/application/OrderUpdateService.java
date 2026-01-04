@@ -1,7 +1,7 @@
 package jhkim593.orderpayment.order.application;
 
 import jhkim593.orderpayment.common.client.payment.PaymentClient;
-import jhkim593.orderpayment.common.client.payment.dto.BillingKeyPaymentRequest;
+import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.order.application.provided.OrderUpdater;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.dto.OrderCreateRequest;
@@ -20,7 +20,7 @@ public class OrderUpdateService implements OrderUpdater {
     public void processOrder(OrderCreateRequest request) {
         Order order = orderTransactionManager.createOrder(request);
 
-        BillingKeyPaymentRequest paymentRequest = BillingKeyPaymentRequest.create(
+        BillingKeyPaymentRequestDto paymentRequest = BillingKeyPaymentRequestDto.create(
                 request.getUserId(),
                 order.getId(),
                 "Order #" + order.getId(),
