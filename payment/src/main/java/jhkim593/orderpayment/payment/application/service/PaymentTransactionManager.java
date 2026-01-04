@@ -1,8 +1,10 @@
 package jhkim593.orderpayment.payment.application.service;
 
 import jhkim593.orderpayment.payment.application.event.InternalEventPublisher;
+import jhkim593.orderpayment.payment.application.provided.PaymentMethodFinder;
 import jhkim593.orderpayment.payment.application.required.*;
 import jhkim593.orderpayment.payment.domain.*;
+import jhkim593.orderpayment.payment.domain.dto.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -15,48 +17,63 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class PaymentTransactionManager {
     private final PaymentRepository paymentRepository;
-    private final InternalEventPublisher eventPublisher;
+    private final PaymentMethodFinder paymentMethodFinder;
 
-    @Async
     @Transactional
-    public void succeeded(Payment payment, String pgTxId, LocalDateTime paidAt) {
+    public Payment create(BillingKeyPaymentRequestDto request){
+        PaymentMethod paymentMethod = paymentMethodFinder.find(request.getPaymentMethodId());
+
+        Payment payment = Payment.create(paymentMethod, request);
+        return paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public Payment succeeded(Payment payment, String pgTxId, LocalDateTime paidAt) {
         payment.succeeded(pgTxId, paidAt);
-        paymentRepository.save(payment);
+        try {
+            payment =  paymentRepository.save(payment);
+        } catch (Exception e){
 
-        eventPublisher.paymentSuccessEventPublish(payment);
+        }
+        return payment;
     }
 
-    @Async
     @Transactional
-    public void failed(Payment payment, PortOneApiException exception) {
+    public Payment failed(Payment payment, PortOneApiException exception) {
         payment.failed();
-        paymentRepository.save(payment);
+        try {
+            payment =  paymentRepository.save(payment);
+        } catch (Exception e){
 
-        eventPublisher.paymentFailEventPublish(payment);
+        }
+        return payment;
     }
 
     @Transactional
-    public void canceling(Long orderId) {
+    public Payment canceling(Long orderId) {
         Payment payment = paymentRepository.findByOrderId(orderId);
         payment.canceling();
-        paymentRepository.save(payment);
+        return paymentRepository.save(payment);
     }
 
-    @Async
     @Transactional
     public void cancelFailed(Payment payment, PortOneApiException exception) {
         payment.cancelFailed();
-        paymentRepository.save(payment);
+        try {
+            paymentRepository.save(payment);
+        } catch (Exception e){
 
-        eventPublisher.paymentFailEventPublish(payment);
+        }
     }
 
-    @Async
     @Transactional
-    public void cancelSucceeded(Payment payment, String pgCancellationId, LocalDateTime cancelledAt) {
+    public Payment cancelSucceeded(Payment payment, String pgCancellationId, LocalDateTime cancelledAt) {
         payment.cancelSucceeded(pgCancellationId, cancelledAt);
-        paymentRepository.save(payment);
+        try {
+            payment = paymentRepository.save(payment);
+        } catch (Exception e) {
 
-        eventPublisher.paymentSuccessEventPublish(payment);
+        }
+        return payment;
     }
 }
