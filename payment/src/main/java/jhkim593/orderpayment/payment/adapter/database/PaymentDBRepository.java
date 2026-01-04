@@ -43,7 +43,7 @@ public class PaymentDBRepository implements PaymentRepository {
                 .fetch();
     }
 
-    public List<Payment> findCancelPendingPayment(int seconds) {
+    public List<Payment> findCancelingPayment(int seconds) {
         QPayment payment = QPayment.payment;
 
         return jpaQueryFactory
