@@ -1,27 +1,23 @@
 package jhkim593.orderpayment.payment.adapter.api;
 
+import jhkim593.orderpayment.payment.application.provided.PaymentFinder;
 import jhkim593.orderpayment.payment.application.service.PaymentService;
 import jhkim593.orderpayment.payment.domain.Payment;
-import jhkim593.orderpayment.payment.domain.dto.BillingKeyPaymentRequestDto;
-import jhkim593.orderpayment.payment.domain.dto.BillingKeyPaymentResponseDto;
-import jhkim593.orderpayment.payment.domain.dto.CancelPaymentRequestDto;
-import jhkim593.orderpayment.payment.domain.dto.CancelPaymentResponseDto;
+import jhkim593.orderpayment.payment.domain.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 public class PaymentController {
     private final PaymentService billingKeyPaymentProcesser;
+    private final PaymentFinder paymentFinder;
 
     @PostMapping("/api/v1/payment/billing-key")
     public ResponseEntity<BillingKeyPaymentResponseDto> billingKeyPayment(@RequestBody BillingKeyPaymentRequestDto request) {
         Payment payment = billingKeyPaymentProcesser.billingKeyPayment(request);
-        BillingKeyPaymentResponseDto response = BillingKeyPaymentResponseDto.from(payment);
+        BillingKeyPaymentResponseDto response = BillingKeyPaymentResponseDto.create(payment);
         return ResponseEntity.ok(response);
     }
 
@@ -31,7 +27,14 @@ public class PaymentController {
             @RequestBody CancelPaymentRequestDto request
     ) {
         Payment payment = billingKeyPaymentProcesser.cancelPayment(paymentId, request);
-        CancelPaymentResponseDto response = CancelPaymentResponseDto.from(payment);
+        CancelPaymentResponseDto response = CancelPaymentResponseDto.create(payment);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/v1/payment/{paymentId}")
+    public ResponseEntity<PaymentDetailResponseDto> getPayment(@PathVariable Long paymentId) {
+        Payment payment = paymentFinder.getPayment(paymentId);
+        PaymentDetailResponseDto response = PaymentDetailResponseDto.create(payment);
         return ResponseEntity.ok(response);
     }
 }
