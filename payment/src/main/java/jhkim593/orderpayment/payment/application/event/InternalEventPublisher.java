@@ -10,28 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-@Component
-@RequiredArgsConstructor
-public class InternalEventPublisher {
-    private final ApplicationEventPublisher applicationEventPublisher;
-    private final IdGenerator idGenerator;
+public interface InternalEventPublisher {
+    void paymentFailEventPublish(Payment payment);
 
-    public void paymentFailEventPublish(Payment payment){
-        applicationEventPublisher.publishEvent(
-                new PaymentFailEvent(
-                        idGenerator.getId(),
-                        PaymentFailEventPayload.create(payment.getPaymentId(), payment.getOrderId())
-                )
-        );
-    }
-
-    public void paymentSuccessEventPublish(Payment payment){
-        applicationEventPublisher.publishEvent(
-                new PaymentSuccessEvent(
-                        idGenerator.getId(),
-                        PaymentSuccessEventPayload.create(payment.getPaymentId(), payment.getOrderId())
-                )
-        );
-    }
-
+    void paymentSuccessEventPublish(Payment payment);
 }
