@@ -1,6 +1,5 @@
 package jhkim593.orderpayment.payment.adapter.snowflake;
 
-import jhkim593.orderpayment.payment.application.required.IdGenerator;
 import org.springframework.stereotype.Component;
 
 import java.util.random.RandomGenerator;
