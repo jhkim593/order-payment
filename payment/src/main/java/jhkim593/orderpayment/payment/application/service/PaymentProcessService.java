@@ -1,5 +1,6 @@
 package jhkim593.orderpayment.payment.application.service;
 
+import jhkim593.orderpayment.payment.application.provided.PaymentProcessor;
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.dto.*;
@@ -9,10 +10,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class PaymentService {
+public class PaymentProcessService implements PaymentProcessor {
     private final PaymentTransactionManager paymentTransactionManager;
     private final PortOneApi portOneApi;
 
+    @Override
     public Payment billingKeyPayment(BillingKeyPaymentRequestDto request) {
         Payment payment = paymentTransactionManager.create(request);
 
@@ -30,6 +32,7 @@ public class PaymentService {
         return payment;
     }
 
+    @Override
     public Payment cancelPayment(Long orderId, CancelPaymentRequestDto request){
         Payment payment = paymentTransactionManager.canceling(orderId);
 

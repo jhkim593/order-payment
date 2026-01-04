@@ -1,7 +1,7 @@
 package jhkim593.orderpayment.payment.adapter.api;
 
 import jhkim593.orderpayment.payment.application.provided.PaymentFinder;
-import jhkim593.orderpayment.payment.application.service.PaymentService;
+import jhkim593.orderpayment.payment.application.provided.PaymentProcessor;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 public class PaymentController {
-    private final PaymentService billingKeyPaymentProcesser;
+    private final PaymentProcessor paymentProcessor;
     private final PaymentFinder paymentFinder;
 
     @PostMapping("/api/v1/payment/billing-key")
     public ResponseEntity<BillingKeyPaymentResponseDto> billingKeyPayment(@RequestBody BillingKeyPaymentRequestDto request) {
-        Payment payment = billingKeyPaymentProcesser.billingKeyPayment(request);
+        Payment payment = paymentProcessor.billingKeyPayment(request);
         BillingKeyPaymentResponseDto response = BillingKeyPaymentResponseDto.create(payment);
         return ResponseEntity.ok(response);
     }
@@ -26,7 +26,7 @@ public class PaymentController {
             @PathVariable Long paymentId,
             @RequestBody CancelPaymentRequestDto request
     ) {
-        Payment payment = billingKeyPaymentProcesser.cancelPayment(paymentId, request);
+        Payment payment = paymentProcessor.cancelPayment(paymentId, request);
         CancelPaymentResponseDto response = CancelPaymentResponseDto.create(payment);
         return ResponseEntity.ok(response);
     }
