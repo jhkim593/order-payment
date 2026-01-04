@@ -32,10 +32,13 @@ public class Order {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
-
+    
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderProduct> orderProducts = new ArrayList<>();
+
+    @Column(nullable = false)
+    private LocalDateTime statusUpdatedAt;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
@@ -50,6 +53,7 @@ public class Order {
                 .userId(userId)
                 .totalAmount(totalAmount)
                 .status(OrderStatus.PENDING)
+                .statusUpdatedAt(LocalDateTime.now())
                 .build();
     }
 
@@ -62,6 +66,7 @@ public class Order {
             throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
         }
         this.status = OrderStatus.SUCCEEDED;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
     public void failed() {
@@ -69,6 +74,7 @@ public class Order {
             throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
         }
         this.status = OrderStatus.FAILED;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
     public void canceling() {
@@ -76,6 +82,7 @@ public class Order {
             throw new OrderException(ErrorCode.ORDER_NOT_SUCCEEDED);
         }
         this.status = OrderStatus.CANCELING;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
     public void cancelSucceeded() {
@@ -83,6 +90,7 @@ public class Order {
             throw new OrderException(ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED);
         }
         this.status = OrderStatus.CANCEL_SUCCEEDED;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
     public void cancelFailed() {
@@ -90,14 +98,15 @@ public class Order {
             throw  new OrderException(ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED);
         }
         this.status = OrderStatus.CANCEL_SUCCEEDED;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
-    public boolean isCancelComplete() {
+    private boolean isCancelComplete() {
         return OrderStatus.CANCEL_SUCCEEDED.equals(status)
                 || OrderStatus.CANCEL_FAILED.equals(status);
     }
 
-    public boolean isComplete() {
+    private boolean isComplete() {
         return OrderStatus.SUCCEEDED.equals(status)
                 || OrderStatus.FAILED.equals(status)
                 || OrderStatus.CANCELING.equals(status)

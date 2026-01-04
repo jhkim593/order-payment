@@ -1,5 +1,6 @@
 package jhkim593.orderpayment.order.adapter.database;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jhkim593.orderpayment.order.adapter.database.jpa.OrderJpaRepository;
 import jhkim593.orderpayment.order.application.required.OrderRepository;
@@ -10,6 +11,9 @@ import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -42,5 +46,45 @@ public class OrderDBRepository implements OrderRepository {
         }
 
         return result;
+    }
+
+    @Override
+    public List<Order> findPendingOrders(int second) {
+        QOrder order = QOrder.order;
+
+        return jpaQueryFactory
+                .select(order)
+                .from(order)
+                .where(
+                        statusEq(order, OrderStatus.PENDING),
+                        statusUpdatedAtBefore(order, second)
+                )
+                .orderBy(order.id.asc())
+                .limit(100)
+                .fetch();
+    }
+
+    @Override
+    public List<Order> findCancelingOrders(int second) {
+        QOrder order = QOrder.order;
+
+        return jpaQueryFactory
+                .select(order)
+                .from(order)
+                .where(
+                        statusEq(order, OrderStatus.CANCELING),
+                        statusUpdatedAtBefore(order, second)
+                )
+                .orderBy(order.id.asc())
+                .limit(100)
+                .fetch();
+    }
+
+    private BooleanExpression statusEq(QOrder order, OrderStatus status) {
+        return status != null ? order.status.eq(status) : null;
+    }
+
+    private BooleanExpression statusUpdatedAtBefore(QOrder order, int second) {
+        return order.statusUpdatedAt.lt(LocalDateTime.now().minusSeconds(second));
     }
 }
