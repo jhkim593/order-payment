@@ -12,12 +12,13 @@ public class FeignErrorDecoder implements ErrorDecoder {
     @Override
     public Exception decode(String methodKey, Response response) {
         logger.error("feign request fail {} {}", response.request().url(), response.status());
-        return new RetryableException(
-                response.status(),
-                response.reason(),
-                response.request().httpMethod(),
-                (Long) null,
-                response.request()
-        );
+        return new Exception();
+//        return new RetryableException(
+//                response.status(),
+//                response.reason(),
+//                response.request().httpMethod(),
+//                (Long) null,
+//                response.request()
+//        );
     }
 }
