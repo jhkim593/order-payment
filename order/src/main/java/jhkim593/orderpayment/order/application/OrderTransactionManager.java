@@ -6,9 +6,8 @@ import jhkim593.orderpayment.order.application.required.ProductRepository;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.OrderProduct;
 import jhkim593.orderpayment.order.domain.Product;
-import jhkim593.orderpayment.order.domain.dto.OrderCreateRequest;
+import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,9 +23,9 @@ public class OrderTransactionManager {
     private final InternalEventPublisher eventPublisher;
 
     @Transactional
-    public Order createOrder(OrderCreateRequest request) {
+    public Order createOrder(OrderProcessRequestDto request) {
         List<Long> productIds = request.getItems().stream()
-                .map(OrderCreateRequest.OrderItemRequest::getProductId)
+                .map(OrderProcessRequestDto.OrderItemRequestDto::getProductId)
                 .collect(Collectors.toList());
 
         List<Product> products = productRepository.findByIds(productIds);
@@ -39,7 +38,7 @@ public class OrderTransactionManager {
 
         Order order = Order.create(request.getUserId(), totalAmount);
 
-        for (OrderCreateRequest.OrderItemRequest item : request.getItems()) {
+        for (OrderProcessRequestDto.OrderItemRequestDto item : request.getItems()) {
             Product product = productMap.get(item.getProductId());
             OrderProduct orderProduct = OrderProduct.create(
                     order,

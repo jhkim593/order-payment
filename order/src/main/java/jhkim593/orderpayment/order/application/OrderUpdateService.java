@@ -4,7 +4,7 @@ import jhkim593.orderpayment.common.client.payment.PaymentClient;
 import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.order.application.provided.OrderUpdater;
 import jhkim593.orderpayment.order.domain.Order;
-import jhkim593.orderpayment.order.domain.dto.OrderProcessRequest;
+import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ public class OrderUpdateService implements OrderUpdater {
     private final PaymentClient paymentClient;
 
     @Override
-    public OrderProcessResponseDto processOrder(OrderProcessRequest request) {
+    public OrderProcessResponseDto processOrder(OrderProcessRequestDto request) {
         Order order = orderTransactionManager.createOrder(request);
 
         try {

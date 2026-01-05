@@ -1,7 +1,7 @@
 package jhkim593.orderpayment.order.adapter.api;
 
 import jhkim593.orderpayment.order.application.provided.OrderUpdater;
-import jhkim593.orderpayment.order.domain.dto.OrderProcessRequest;
+import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ public class OrderController {
     private final OrderUpdater orderUpdater;
 
     @PostMapping("/api/v1/orders")
-    public ResponseEntity<OrderProcessResponseDto> processOrder (@RequestBody OrderProcessRequest request) {
+    public ResponseEntity<OrderProcessResponseDto> processOrder (@RequestBody OrderProcessRequestDto request) {
         OrderProcessResponseDto response = orderUpdater.processOrder(request);
         return ResponseEntity.ok(response);
     }

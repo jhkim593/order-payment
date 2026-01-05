@@ -9,15 +9,15 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderProcessRequest {
+public class OrderProcessRequestDto {
     private Long userId;
     private Long paymentMethodId;
-    private List<OrderItemRequest> items;
+    private List<OrderItemRequestDto> items;
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class OrderItemRequest {
+    public static class OrderItemRequestDto {
         private int price;
         private Long productId;
         private Integer quantity;
