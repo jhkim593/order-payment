@@ -52,28 +52,13 @@ public class OrderTransactionManager {
         return orderRepository.save(order);
     }
 
-    @Async
-    @Transactional
-    public void succeededAsync(Long orderId) {
-        Order order = orderRepository.find(orderId);
-        order.succeeded();
-        orderRepository.save(order);
-        eventPublisher.orderSucceeded(order);
-    }
 
     @Transactional
     public void succeeded(Long orderId) {
         Order order = orderRepository.find(orderId);
         order.succeeded();
-        eventPublisher.orderSucceeded(order);
-    }
-
-    @Async
-    @Transactional
-    public void failedAsync(Long orderId) {
-        Order order = orderRepository.find(orderId);
-        order.failed();
         orderRepository.save(order);
+        eventPublisher.orderSucceeded(order);
     }
 
     @Transactional

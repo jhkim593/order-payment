@@ -4,7 +4,8 @@ import jhkim593.orderpayment.common.client.payment.PaymentClient;
 import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.order.application.provided.OrderUpdater;
 import jhkim593.orderpayment.order.domain.Order;
-import jhkim593.orderpayment.order.domain.dto.OrderCreateRequest;
+import jhkim593.orderpayment.order.domain.dto.OrderProcessRequest;
+import jhkim593.orderpayment.order.domain.dto.OrderProcessResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,24 +18,42 @@ public class OrderUpdateService implements OrderUpdater {
     private final PaymentClient paymentClient;
 
     @Override
-    public void processOrder(OrderCreateRequest request) {
+    public OrderProcessResponseDto processOrder(OrderProcessRequest request) {
         Order order = orderTransactionManager.createOrder(request);
 
-        BillingKeyPaymentRequestDto paymentRequest = BillingKeyPaymentRequestDto.create(
-                request.getUserId(),
-                order.getId(),
-                "Order #" + order.getId(),
-                order.getTotalAmount(),
-                request.getPaymentMethodId(),
-                "KRW"
-        );
-
         try {
+            BillingKeyPaymentRequestDto paymentRequest = BillingKeyPaymentRequestDto.create(
+                    request.getUserId(),
+                    order.getId(),
+                    "Order #" + order.getId(),
+                    order.getTotalAmount(),
+                    request.getPaymentMethodId(),
+                    "KRW"
+            );
+
             paymentClient.billingKeyPayment(paymentRequest);
-            orderTransactionManager.succeededAsync(order.getId());
-            log.info("Payment success and order completed. orderId={}", order.getId());
         } catch (Exception e) {
-            orderTransactionManager.failedAsync(order.getId());
+            updateFailed(order.getId());
+            throw e;
+        }
+
+        updateSucceeded(order.getId());
+        return OrderProcessResponseDto.from(order);
+    }
+
+    private void updateSucceeded(Long orderId) {
+        try {
+            orderTransactionManager.succeeded(orderId);
+        } catch (Exception e) {
+            log.error("Failed to update SUCCEEDED, orderId={}", orderId, e);
+        }
+    }
+
+    private void updateFailed(Long orderId) {
+        try {
+            orderTransactionManager.failed(orderId);
+        } catch (Exception e) {
+            log.error("Failed to update FAILED. orderId={}", orderId, e);
         }
     }
 

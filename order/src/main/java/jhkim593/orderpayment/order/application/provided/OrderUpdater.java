@@ -1,9 +1,10 @@
 package jhkim593.orderpayment.order.application.provided;
 
-import jhkim593.orderpayment.order.domain.dto.OrderCreateRequest;
+import jhkim593.orderpayment.order.domain.dto.OrderProcessRequest;
+import jhkim593.orderpayment.order.domain.dto.OrderProcessResponseDto;
 
 public interface OrderUpdater {
-    void processOrder(OrderCreateRequest request);
+    OrderProcessResponseDto processOrder(OrderProcessRequest request);
     void cancelOrder(Long orderId);
     void cancelSucceededOrder(Long orderId);
     void cancelFailedOrder(Long orderId);

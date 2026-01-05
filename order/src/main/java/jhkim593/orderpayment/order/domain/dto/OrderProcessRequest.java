@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderCreateRequest {
+public class OrderProcessRequest {
     private Long userId;
     private Long paymentMethodId;
     private List<OrderItemRequest> items;
