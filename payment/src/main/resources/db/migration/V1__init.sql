@@ -12,7 +12,7 @@ CREATE TABLE payment_methods
     updated_at       TIMESTAMP    NOT NULL
 );
 
-CREATE TABLE payments
+CREATE TABLE payment
 (
     payment_id        BIGSERIAL PRIMARY KEY,
     user_id           BIGINT NOT NULL,
@@ -26,12 +26,13 @@ CREATE TABLE payments
     pg_cancellation_id VARCHAR(256),
     paid_at           TIMESTAMP,
     cancelled_at      TIMESTAMP,
+    status_updated_at TIMESTAMP    NOT NULL,
     created_at        TIMESTAMP    NOT NULL,
     updated_at        TIMESTAMP    NOT NULL
 );
 
-CREATE UNIQUE INDEX idx_payments_order_status
-    ON payments (order_id)
+CREATE UNIQUE INDEX idx_payment_order_status
+    ON payment (order_id)
     WHERE status IN ('PAYMENT_PENDING', 'PAYMENT_SUCCESS');
 
 
@@ -39,12 +40,12 @@ CREATE UNIQUE INDEX idx_payments_order_status
 CREATE TABLE payment_histories
 (
     id                BIGSERIAL PRIMARY KEY,
-    payment_id        BIGINT REFERENCES payments (payment_id) NOT NULL ,
+    payment_id        BIGINT REFERENCES payment (payment_id) NOT NULL ,
     type              VARCHAR(20)  NOT NULL,
     status            VARCHAR(20)  NOT NULL,
     pg_row_data       TEXT,
     pg_transaction_id VARCHAR(255) NOT NULL,
---     payment_id        BIGINT REFERENCES payments (payment_id),
+--     payment_id        BIGINT REFERENCES payment (payment_id),
 --     credit_plan_id    BIGINT REFERENCES credit_plans (id),
     created_at        TIMESTAMP    NOT NULL
 );
@@ -53,4 +54,4 @@ CREATE TABLE payment_histories
 
 -- Test data
 INSERT INTO payment_methods (user_id, pg_provider, payment_type, billing_key, is_default, is_active, created_at, updated_at)
-VALUES (1, 'PORTONE', 'CARD', 'billing-key-019a6c29-6944-fd02-80fb-fe67791fdd2a', true, true, NOW(), NOW());
+VALUES (1, 'PAYPAL', 'CARD', 'billing-key-019a6c29-6944-fd02-80fb-fe67791fdd2a', true, true, NOW(), NOW());
