@@ -86,7 +86,7 @@ public class Order {
     }
 
     public void cancelSucceeded() {
-        if(OrderStatus.CANCEL_SUCCEEDED.equals(status)){
+        if(isCancelComplete()){
             throw new OrderException(ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED);
         }
         this.status = OrderStatus.CANCEL_SUCCEEDED;
@@ -97,7 +97,7 @@ public class Order {
         if(isCancelComplete()){
             throw  new OrderException(ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED);
         }
-        this.status = OrderStatus.CANCEL_SUCCEEDED;
+        this.status = OrderStatus.CANCEL_FAILED;
         this.statusUpdatedAt = LocalDateTime.now();
     }
 

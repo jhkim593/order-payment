@@ -2,8 +2,10 @@ package jhkim593.orderpayment.order.application.event;
 
 import jhkim593.orderpayment.common.core.event.order.CreditOrderCancelSucceedEvent;
 import jhkim593.orderpayment.common.core.event.order.CreditOrderCompleteEvent;
+import jhkim593.orderpayment.common.core.event.order.OrderCancelEvent;
 import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderCancelSucceedEventPayload;
 import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderCompleteEventPayload;
+import jhkim593.orderpayment.common.core.event.order.payload.OrderCancelEventPayload;
 import jhkim593.orderpayment.common.core.snowflake.IdGenerator;
 import jhkim593.orderpayment.order.domain.*;
 import lombok.RequiredArgsConstructor;
@@ -17,13 +19,22 @@ public class InternalEventPublisher {
     private final ApplicationEventPublisher eventPublisher;
     private final IdGenerator idGenerator;
 
+    public void orderCancel(Long orderId, String reason) {
+        eventPublisher.publishEvent(
+                new OrderCancelEvent(
+                        idGenerator.getId(),
+                        OrderCancelEventPayload.create(orderId, reason)
+                )
+        );
+    }
+
     public void orderSucceeded(Order order) {
         order.getOrderProducts().stream()
                 .map(OrderProduct::getProduct)
                 .forEach(product -> publishSucceededEventForProduct(order, product));
     }
 
-    public void orderCanceled(Order order) {
+    public void orderCancelSucceed(Order order) {
         order.getOrderProducts().stream()
                 .map(OrderProduct::getProduct)
                 .forEach(product -> publishCancelEventForProduct(order, product));

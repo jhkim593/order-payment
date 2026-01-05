@@ -23,7 +23,7 @@ public class OrderTransactionManager {
     private final InternalEventPublisher eventPublisher;
 
     @Transactional
-    public Order createOrder(OrderProcessRequestDto request) {
+    public Order processOrder(OrderProcessRequestDto request) {
         List<Long> productIds = request.getItems().stream()
                 .map(OrderProcessRequestDto.OrderItemRequestDto::getProductId)
                 .collect(Collectors.toList());
@@ -68,10 +68,12 @@ public class OrderTransactionManager {
     }
 
     @Transactional
-    public void canceling(Long orderId) {
+    public Order canceling(Long orderId) {
         Order order = orderRepository.find(orderId);
         order.canceling();
-        orderRepository.save(order);
+        order = orderRepository.save(order);
+        eventPublisher.orderCancel(orderId, "");
+        return order;
     }
 
     @Transactional
@@ -79,7 +81,7 @@ public class OrderTransactionManager {
         Order order = orderRepository.find(orderId);
         order.cancelSucceeded();
         orderRepository.save(order);
-        eventPublisher.orderCanceled(order);
+        eventPublisher.orderCancelSucceed(order);
     }
 
     @Transactional

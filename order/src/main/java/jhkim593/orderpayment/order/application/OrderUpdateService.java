@@ -19,7 +19,7 @@ public class OrderUpdateService implements OrderUpdater {
 
     @Override
     public OrderProcessResponseDto processOrder(OrderProcessRequestDto request) {
-        Order order = orderTransactionManager.createOrder(request);
+        Order order = orderTransactionManager.processOrder(request);
 
         try {
             BillingKeyPaymentRequestDto paymentRequest = BillingKeyPaymentRequestDto.create(
@@ -41,6 +41,21 @@ public class OrderUpdateService implements OrderUpdater {
         return OrderProcessResponseDto.from(order);
     }
 
+    @Override
+    public void cancelingOrder(Long orderId) {
+        orderTransactionManager.canceling(orderId);
+    }
+
+    @Override
+    public void cancelSucceededOrder(Long orderId) {
+        orderTransactionManager.cancelSucceeded(orderId);
+    }
+
+    @Override
+    public void cancelFailedOrder(Long orderId) {
+        orderTransactionManager.cancelFailed(orderId);
+    }
+
     private void updateSucceeded(Long orderId) {
         try {
             orderTransactionManager.succeeded(orderId);
@@ -55,52 +70,5 @@ public class OrderUpdateService implements OrderUpdater {
         } catch (Exception e) {
             log.error("Failed to update FAILED. orderId={}", orderId, e);
         }
-    }
-
-    @Override
-    public void cancelOrder(Long orderId) {
-        try {
-            orderTransactionManager.canceling(orderId);
-
-            paymentClient.cancelPayment(orderId);
-
-            orderTransactionManager.cancelSucceeded(orderId);
-
-            log.info("Order cancelled successfully. orderId={}", orderId);
-        } catch (Exception e) {
-            log.error("Failed to cancel order. orderId={}", orderId, e);
-            throw e;
-        }
-    }
-
-    @Override
-    public void cancelSucceededOrder(Long orderId) {
-        try {
-            orderTransactionManager.cancelSucceeded(orderId);
-            log.info("Order cancelled successfully. orderId={}", orderId);
-        } catch (Exception e) {
-            log.error("Failed to cancel order. orderId={}", orderId, e);
-            throw e;
-        }
-    }
-
-    @Override
-    public void cancelFailedOrder(Long orderId) {
-        try {
-            orderTransactionManager.cancelFailed(orderId);
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-
-    @Override
-    public void succeededOrder(Long id){
-        orderTransactionManager.succeeded(id);
-    }
-
-    @Override
-    public void failedOrder(Long id){
-        orderTransactionManager.failed(id);
     }
 }
