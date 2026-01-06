@@ -10,4 +10,5 @@ public interface PaymentRepository {
     List<Payment> findCancelingPayment(int seconds);
     Payment find(Long id);
     Payment findByOrderId(Long orderId);
+    boolean existsByOrderId(Long orderId);
 }

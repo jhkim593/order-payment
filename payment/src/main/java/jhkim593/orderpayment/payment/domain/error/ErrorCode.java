@@ -9,7 +9,8 @@ public enum ErrorCode {
     PAYMENT_NOT_FOUND("P001", 404,"payment not found"),
     PAYMENT_NOT_SUCCEEDED("P002", 400,"payment not succeeded"),
     PAYMENT_NOT_PENDING("P003", 400,"payment not pending"),
-    PAYMENT_NOT_CANCELING("P004", 400,"payment not canceling");
+    PAYMENT_NOT_CANCELING("P004", 400,"payment not canceling"),
+    PAYMENT_ALREADY_EXISTS("P005", 400,"payment already exists for this order");
 
     private final String code;
     private final int status;

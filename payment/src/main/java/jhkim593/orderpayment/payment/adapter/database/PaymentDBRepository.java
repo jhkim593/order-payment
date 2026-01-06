@@ -101,4 +101,17 @@ public class PaymentDBRepository implements PaymentRepository {
         return payment.statusUpdatedAt.lt(LocalDateTime.now().minusSeconds(seconds));
     }
 
+    @Override
+    public boolean existsByOrderId(Long orderId) {
+        QPayment payment = QPayment.payment;
+
+        Integer result = jpaQueryFactory
+                .selectOne()
+                .from(payment)
+                .where(payment.orderId.eq(orderId))
+                .fetchFirst();
+
+        return result != null;
+    }
+
 }

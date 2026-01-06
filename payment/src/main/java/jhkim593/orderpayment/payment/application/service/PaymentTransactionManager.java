@@ -6,6 +6,8 @@ import jhkim593.orderpayment.payment.application.provided.PaymentMethodFinder;
 import jhkim593.orderpayment.payment.application.required.PaymentRepository;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentMethod;
+import jhkim593.orderpayment.payment.domain.error.ErrorCode;
+import jhkim593.orderpayment.payment.domain.error.PaymentException;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -22,6 +24,8 @@ public class PaymentTransactionManager {
 
     @Transactional
     public Payment create(BillingKeyPaymentRequestDto request){
+        validateDuplicatePaymentByOrderId(request.getOrderId());
+
         PaymentMethod paymentMethod = paymentMethodFinder.find(request.getPaymentMethodId());
 
         Payment payment = Payment.create(idGenerator.getId(), paymentMethod, request);
@@ -57,5 +61,11 @@ public class PaymentTransactionManager {
     public Payment cancelSucceeded(Payment payment, String pgCancellationId, LocalDateTime cancelledAt) {
         payment.cancelSucceeded(pgCancellationId, cancelledAt);
         return paymentRepository.save(payment);
+    }
+
+    private void validateDuplicatePaymentByOrderId(Long orderId) {
+        if (paymentRepository.existsByOrderId(orderId)) {
+            throw new PaymentException(ErrorCode.PAYMENT_ALREADY_EXISTS);
+        }
     }
 }

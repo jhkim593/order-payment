@@ -16,7 +16,7 @@ CREATE TABLE payment
 (
     payment_id         BIGSERIAL PRIMARY KEY,
     user_id            BIGINT NOT NULL,
-    order_id           BIGINT NOT NULL,
+    order_id           BIGINT NOT NULL UNIQUE,
     currency           VARCHAR(20),
     payment_method_id  BIGINT REFERENCES payment_method (payment_method_id),
     order_name         VARCHAR(256),
