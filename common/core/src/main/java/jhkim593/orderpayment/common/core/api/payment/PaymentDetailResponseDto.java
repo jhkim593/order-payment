@@ -1,12 +1,13 @@
 package jhkim593.orderpayment.common.core.api.payment;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentDetailResponseDto {
     private Long paymentId;
     private Long orderId;
@@ -20,6 +21,8 @@ public class PaymentDetailResponseDto {
 
     @Getter
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class PaymentMethodDto {
         private String pgProvider;
     }
