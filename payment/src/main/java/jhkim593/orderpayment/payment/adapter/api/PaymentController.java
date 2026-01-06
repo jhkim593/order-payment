@@ -37,9 +37,9 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/v1/payment/{paymentId}")
-    public ResponseEntity<PaymentDetailResponseDto> getPayment(@PathVariable Long paymentId) {
-        Payment payment = paymentFinder.getPayment(paymentId);
+    @GetMapping("/api/v1/payment/order/{orderId}")
+    public ResponseEntity<PaymentDetailResponseDto> getPaymentByOrderId(@PathVariable Long orderId) {
+        Payment payment = paymentFinder.getPaymentByOrderId(orderId);
 
         PaymentDetailResponseDto.PaymentMethodDto paymentMethodDto = null;
         if (payment.getPaymentMethod() != null) {

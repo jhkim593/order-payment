@@ -17,6 +17,6 @@ public interface PaymentClient {
     @RequestLine("POST /api/v1/payment/{paymentId}/cancel")
     CancelPaymentResponseDto cancelPayment(@Param("paymentId") Long paymentId);
 
-    @RequestLine("GET /api/v1/payment/{paymentId}")
-    PaymentDetailResponseDto getPayment(@Param("paymentId") Long paymentId);
+    @RequestLine("GET /api/v1/payment/order/{orderId}")
+    PaymentDetailResponseDto getPaymentByOrderId(@Param("orderId") Long orderId);
 }

@@ -54,7 +54,7 @@ public class OrderRecoverService {
 
     private void checkPaymentStatus(Order order) {
         try {
-            PaymentDetailResponseDto payment = paymentClient.getPayment(order.getOrderId());
+            PaymentDetailResponseDto payment = paymentClient.getPaymentByOrderId(order.getOrderId());
 
             String status = payment.getStatus();
             if ("SUCCEEDED".equals(status)) {
@@ -71,7 +71,7 @@ public class OrderRecoverService {
 
     private void checkCancelPaymentStatus(Order order) {
         try {
-            PaymentDetailResponseDto payment = paymentClient.getPayment(order.getOrderId());
+            PaymentDetailResponseDto payment = paymentClient.getPaymentByOrderId(order.getOrderId());
 
             String status = payment.getStatus();
             if ("CANCEL_SUCCEEDED".equals(status)) {

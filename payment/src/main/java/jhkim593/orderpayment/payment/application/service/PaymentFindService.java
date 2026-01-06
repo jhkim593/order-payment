@@ -12,7 +12,7 @@ public class PaymentFindService implements PaymentFinder {
     private final PaymentRepository paymentRepository;
 
     @Override
-    public Payment getPayment(Long paymentId) {
-        return paymentRepository.find(paymentId);
+    public Payment getPaymentByOrderId(Long orderId) {
+        return paymentRepository.findByOrderId(orderId);
     }
 }
