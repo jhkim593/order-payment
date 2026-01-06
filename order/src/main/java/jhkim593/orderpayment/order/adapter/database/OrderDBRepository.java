@@ -59,7 +59,7 @@ public class OrderDBRepository implements OrderRepository {
                         statusEq(order, OrderStatus.PENDING),
                         statusUpdatedAtBefore(order, second)
                 )
-                .orderBy(order.id.asc())
+                .orderBy(order.orderId.asc())
                 .limit(100)
                 .fetch();
     }
@@ -75,7 +75,7 @@ public class OrderDBRepository implements OrderRepository {
                         statusEq(order, OrderStatus.CANCELING),
                         statusUpdatedAtBefore(order, second)
                 )
-                .orderBy(order.id.asc())
+                .orderBy(order.orderId.asc())
                 .limit(100)
                 .fetch();
     }

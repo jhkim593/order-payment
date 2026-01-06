@@ -19,13 +19,13 @@ public class OrderUpdateService implements OrderUpdater {
 
     @Override
     public OrderProcessResponseDto processOrder(OrderProcessRequestDto request) {
-        Order order = orderTransactionManager.processOrder(request);
+        Order order = orderTransactionManager.createOrder(request);
 
         try {
             BillingKeyPaymentRequestDto paymentRequest = BillingKeyPaymentRequestDto.create(
                     request.getUserId(),
-                    order.getId(),
-                    "Order #" + order.getId(),
+                    order.getOrderId(),
+                    "Order #" + order.getOrderId(),
                     order.getTotalAmount(),
                     request.getPaymentMethodId(),
                     "KRW"
@@ -33,11 +33,11 @@ public class OrderUpdateService implements OrderUpdater {
 
             paymentClient.billingKeyPayment(paymentRequest);
         } catch (Exception e) {
-            updateFailed(order.getId());
+            updateFailed(order.getOrderId());
             throw e;
         }
 
-        updateSucceeded(order.getId());
+        updateSucceeded(order.getOrderId());
         return OrderProcessResponseDto.from(order);
     }
 

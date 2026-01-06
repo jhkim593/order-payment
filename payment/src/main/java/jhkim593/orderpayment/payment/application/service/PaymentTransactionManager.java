@@ -1,6 +1,7 @@
 package jhkim593.orderpayment.payment.application.service;
 
 import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
+import jhkim593.orderpayment.common.core.snowflake.IdGenerator;
 import jhkim593.orderpayment.payment.application.provided.PaymentMethodFinder;
 import jhkim593.orderpayment.payment.application.required.PaymentRepository;
 import jhkim593.orderpayment.payment.domain.Payment;
@@ -17,12 +18,13 @@ import java.time.LocalDateTime;
 public class PaymentTransactionManager {
     private final PaymentRepository paymentRepository;
     private final PaymentMethodFinder paymentMethodFinder;
+    private final IdGenerator idGenerator;
 
     @Transactional
     public Payment create(BillingKeyPaymentRequestDto request){
         PaymentMethod paymentMethod = paymentMethodFinder.find(request.getPaymentMethodId());
 
-        Payment payment = Payment.create(paymentMethod, request);
+        Payment payment = Payment.create(idGenerator.getId(), paymentMethod, request);
         return paymentRepository.save(payment);
     }
 

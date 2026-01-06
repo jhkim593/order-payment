@@ -23,14 +23,14 @@ public class OrderTransactionManager {
     private final InternalEventPublisher eventPublisher;
 
     @Transactional
-    public Order processOrder(OrderProcessRequestDto request) {
+    public Order createOrder(OrderProcessRequestDto request) {
         List<Long> productIds = request.getItems().stream()
                 .map(OrderProcessRequestDto.OrderItemRequestDto::getProductId)
                 .collect(Collectors.toList());
 
         List<Product> products = productRepository.findByIds(productIds);
         Map<Long, Product> productMap = products.stream()
-                .collect(Collectors.toMap(Product::getId, p -> p));
+                .collect(Collectors.toMap(Product::getProductId, p -> p));
 
         int totalAmount = request.getItems().stream()
                 .mapToInt(item -> item.getPrice() * item.getQuantity())

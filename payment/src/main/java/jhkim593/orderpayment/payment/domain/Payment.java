@@ -11,6 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "payment")
 @Getter
 @Builder(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -18,7 +19,6 @@ import java.time.LocalDateTime;
 public class Payment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
 
     private Long userId;
@@ -44,7 +44,6 @@ public class Payment {
 
     private String pgCancellationId;
 
-    @Column(updatable = false)
     private LocalDateTime paidAt;
 
     @Column(updatable = false)
@@ -61,8 +60,9 @@ public class Payment {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public static Payment create(PaymentMethod paymentMethod, BillingKeyPaymentRequestDto request) {
+    public static Payment create(Long id, PaymentMethod paymentMethod, BillingKeyPaymentRequestDto request) {
         return Payment.builder()
+                .paymentId(id)
                 .userId(request.getUserId())
                 .currency(request.getCurrency())
                 .paymentMethod(paymentMethod)

@@ -11,12 +11,13 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
+@Table(name = "outbox_event")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 public class OutboxEvent {
     @Id
-    private Long id;
+    private Long outboxEventId;
     @Enumerated(EnumType.STRING)
     private EventType type;
     private Long aggregateId;
@@ -27,7 +28,7 @@ public class OutboxEvent {
 
     public static OutboxEvent create(EventData eventData) {
         return OutboxEvent.builder()
-                .id(eventData.getEventId())
+                .outboxEventId(eventData.getEventId())
                 .type(eventData.getType())
                 .aggregateId(eventData.getAggregateId())
                 .payload(eventData.payloadJson())
@@ -43,7 +44,7 @@ public class OutboxEvent {
         );
 
         return EventData.create(
-                this.id,
+                this.outboxEventId,
                 this.aggregateId,
                 this.type,
                 eventPayload,

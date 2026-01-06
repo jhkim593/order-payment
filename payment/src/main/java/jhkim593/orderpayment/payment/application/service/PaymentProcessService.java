@@ -21,7 +21,7 @@ public class PaymentProcessService implements PaymentProcessor {
         Payment payment = paymentTransactionManager.create(request);
 
         PortOneBillingKeyPaymentRequestDto clientRequest =
-                PortOneBillingKeyPaymentRequestDto.create(payment.billingKey(), payment.getOrderName(), payment.getAmount(), "KRW");
+                PortOneBillingKeyPaymentRequestDto.create(payment.billingKey(), payment.getOrderName(), payment.getAmount(), "USD");
 
         PortOneBillingKeyPaymentResponseDto response;
         try {

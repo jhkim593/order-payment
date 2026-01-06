@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "credit_products")
+@Table(name = "credit_product")
 @DiscriminatorValue("CREDIT")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

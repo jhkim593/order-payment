@@ -52,7 +52,7 @@ public class InternalEventPublisher {
                         idGenerator.getId(),
                         new CreditOrderCompleteEventPayload(
                                 order.getUserId(),
-                                order.getId(),
+                                order.getOrderId(),
                                 creditProduct.getCreditAmount()
                         )
                 )
@@ -71,7 +71,7 @@ public class InternalEventPublisher {
                         idGenerator.getId(),
                         new CreditOrderCancelSucceedEventPayload(
                                 order.getUserId(),
-                                order.getId(),
+                                order.getOrderId(),
                                 creditProduct.getCreditAmount()
                         )
                 )

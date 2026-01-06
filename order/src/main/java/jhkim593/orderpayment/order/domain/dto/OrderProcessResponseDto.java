@@ -13,7 +13,7 @@ public class OrderProcessResponseDto {
 
     public static OrderProcessResponseDto from(Order order) {
         return OrderProcessResponseDto.builder()
-                .orderId(order.getId())
+                .orderId(order.getOrderId())
                 .userId(order.getUserId())
                 .totalAmount(order.getTotalAmount())
                 .build();

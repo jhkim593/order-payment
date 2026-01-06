@@ -1,34 +1,34 @@
-CREATE TABLE payment_methods
+CREATE TABLE payment_method
 (
-    id               BIGSERIAL PRIMARY KEY,
-    user_id          BIGINT       NOT NULL,
-    pg_provider      VARCHAR(50)  NOT NULL,
-    payment_type     VARCHAR(20)  NOT NULL,
-    billing_key      VARCHAR(255) NOT NULL,
-    payment_detail   TEXT,
-    is_default       BOOLEAN      NOT NULL DEFAULT FALSE,
-    is_active        BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at       TIMESTAMP    NOT NULL,
-    updated_at       TIMESTAMP    NOT NULL
+    payment_method_id BIGSERIAL PRIMARY KEY,
+    user_id           BIGINT       NOT NULL,
+    pg_provider       VARCHAR(50)  NOT NULL,
+    payment_type      VARCHAR(20)  NOT NULL,
+    billing_key       VARCHAR(255) NOT NULL,
+    payment_detail    TEXT,
+    is_default        BOOLEAN      NOT NULL DEFAULT FALSE,
+    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at        TIMESTAMP    NOT NULL,
+    updated_at        TIMESTAMP    NOT NULL
 );
 
 CREATE TABLE payment
 (
-    payment_id        BIGSERIAL PRIMARY KEY,
-    user_id           BIGINT NOT NULL,
-    order_id          BIGINT NOT NULL,
-    currency          VARCHAR(20),
-    payment_method_id BIGINT REFERENCES payment_methods (id),
-    order_name        VARCHAR(256),
-    amount            INTEGER      NOT NULL,
-    status            VARCHAR(20)  NOT NULL,
-    pg_transaction_id VARCHAR(256),
+    payment_id         BIGSERIAL PRIMARY KEY,
+    user_id            BIGINT NOT NULL,
+    order_id           BIGINT NOT NULL,
+    currency           VARCHAR(20),
+    payment_method_id  BIGINT REFERENCES payment_method (payment_method_id),
+    order_name         VARCHAR(256),
+    amount             INTEGER      NOT NULL,
+    status             VARCHAR(20)  NOT NULL,
+    pg_transaction_id  VARCHAR(256),
     pg_cancellation_id VARCHAR(256),
-    paid_at           TIMESTAMP,
-    cancelled_at      TIMESTAMP,
-    status_updated_at TIMESTAMP    NOT NULL,
-    created_at        TIMESTAMP    NOT NULL,
-    updated_at        TIMESTAMP    NOT NULL
+    paid_at            TIMESTAMP,
+    cancelled_at       TIMESTAMP,
+    status_updated_at  TIMESTAMP    NOT NULL,
+    created_at         TIMESTAMP    NOT NULL,
+    updated_at         TIMESTAMP    NOT NULL
 );
 
 CREATE UNIQUE INDEX idx_payment_order_status
@@ -37,21 +37,21 @@ CREATE UNIQUE INDEX idx_payment_order_status
 
 
 
-CREATE TABLE payment_histories
+CREATE TABLE payment_history
 (
-    id                BIGSERIAL PRIMARY KEY,
-    payment_id        BIGINT REFERENCES payment (payment_id) NOT NULL ,
-    type              VARCHAR(20)  NOT NULL,
-    status            VARCHAR(20)  NOT NULL,
-    pg_row_data       TEXT,
-    pg_transaction_id VARCHAR(255) NOT NULL,
+    payment_history_id BIGSERIAL PRIMARY KEY,
+    payment_id         BIGINT REFERENCES payment (payment_id) NOT NULL,
+    type               VARCHAR(20)  NOT NULL,
+    status             VARCHAR(20)  NOT NULL,
+    pg_row_data        TEXT,
+    pg_transaction_id  VARCHAR(255) NOT NULL,
 --     payment_id        BIGINT REFERENCES payment (payment_id),
 --     credit_plan_id    BIGINT REFERENCES credit_plans (id),
-    created_at        TIMESTAMP    NOT NULL
+    created_at         TIMESTAMP    NOT NULL
 );
 
 
 
 -- Test data
-INSERT INTO payment_methods (user_id, pg_provider, payment_type, billing_key, is_default, is_active, created_at, updated_at)
+INSERT INTO payment_method (user_id, pg_provider, payment_type, billing_key, is_default, is_active, created_at, updated_at)
 VALUES (1, 'PAYPAL', 'CARD', 'billing-key-019a6c29-6944-fd02-80fb-fe67791fdd2a', true, true, NOW(), NOW());

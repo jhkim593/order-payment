@@ -24,6 +24,6 @@ public class ProductDBRepository implements ProductRepository {
 
     @Override
     public List<Product> findByIds(List<Long> ids) {
-        return productJpaRepository.findByIdIn(ids);
+        return productJpaRepository.findByProductIdIn(ids);
     }
 }

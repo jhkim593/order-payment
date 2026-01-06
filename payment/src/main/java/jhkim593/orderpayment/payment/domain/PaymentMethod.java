@@ -10,7 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "payment_methods")
+@Table(name = "payment_method")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -19,7 +19,7 @@ public class PaymentMethod {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long paymentMethodId;
 
     private Long userId;
 
@@ -52,7 +52,7 @@ public class PaymentMethod {
 
     public PaymentMethodDetailDto createDetailDto() {
         return PaymentMethodDetailDto.builder()
-                .id(this.id)
+                .id(this.paymentMethodId)
                 .provider(this.pgProvider != null ? this.pgProvider.name() : null)
                 .billingKey(this.billingKey)
                 .paymentDetail(this.paymentDetail)
