@@ -8,10 +8,14 @@ import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.dto.*;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentProcessService implements PaymentProcessor {
     private final PaymentTransactionManager paymentTransactionManager;
     private final PortOneApi portOneApi;
@@ -27,10 +31,10 @@ public class PaymentProcessService implements PaymentProcessor {
         try {
             response = portOneApi.billingKeyPayment(payment.getPaymentId(), clientRequest);
         } catch (PortOneApiException e) {
-            paymentTransactionManager.failed(payment,e);
+            updateFailed(payment, e);
             throw e;
         }
-        payment = paymentTransactionManager.succeeded(payment, response.getPayment().getPgTxId(), response.getPayment().getPaidAt());
+        payment = updateSucceeded(payment, response.getPayment().getPgTxId(), response.getPayment().getPaidAt());
         return payment;
     }
 
@@ -45,10 +49,44 @@ public class PaymentProcessService implements PaymentProcessor {
         try {
             response = portOneApi.cancelPayment(payment.getPaymentId(), cancelRequest);
         } catch (PortOneApiException e) {
-            paymentTransactionManager.cancelFailed(payment, e);
+            updateCancelFailed(payment, e);
             throw e;
         }
-        payment = paymentTransactionManager.cancelSucceeded(payment, response.getCancellation().getPgCancellationId(), response.getCancellation().getCancelledAt());
+        payment = updateCancelSucceeded(payment, response.getCancellation().getPgCancellationId(), response.getCancellation().getCancelledAt());
         return payment;
+    }
+
+    private Payment updateSucceeded(Payment payment, String pgTxId, LocalDateTime paidAt) {
+        try {
+            return paymentTransactionManager.succeeded(payment, pgTxId, paidAt);
+        } catch (Exception e) {
+            log.error("Failed to update SUCCEEDED, paymentId={}", payment.getPaymentId(), e);
+            return payment;
+        }
+    }
+
+    private void updateFailed(Payment payment, PortOneApiException exception) {
+        try {
+            paymentTransactionManager.failed(payment, exception);
+        } catch (Exception e) {
+            log.error("Failed to update FAILED, paymentId={}", payment.getPaymentId(), e);
+        }
+    }
+
+    private Payment updateCancelSucceeded(Payment payment, String pgCancellationId, LocalDateTime cancelledAt) {
+        try {
+            return paymentTransactionManager.cancelSucceeded(payment, pgCancellationId, cancelledAt);
+        } catch (Exception e) {
+            log.error("Failed to update CANCEL_SUCCEEDED, paymentId={}", payment.getPaymentId(), e);
+            return payment;
+        }
+    }
+
+    private void updateCancelFailed(Payment payment, PortOneApiException exception) {
+        try {
+            paymentTransactionManager.cancelFailed(payment, exception);
+        } catch (Exception e) {
+            log.error("Failed to update CANCEL_FAILED, paymentId={}", payment.getPaymentId(), e);
+        }
     }
 }

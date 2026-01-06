@@ -31,23 +31,13 @@ public class PaymentTransactionManager {
     @Transactional
     public Payment succeeded(Payment payment, String pgTxId, LocalDateTime paidAt) {
         payment.succeeded(pgTxId, paidAt);
-        try {
-            payment =  paymentRepository.save(payment);
-        } catch (Exception e){
-
-        }
-        return payment;
+        return paymentRepository.save(payment);
     }
 
     @Transactional
     public Payment failed(Payment payment, PortOneApiException exception) {
         payment.failed();
-        try {
-            payment =  paymentRepository.save(payment);
-        } catch (Exception e){
-
-        }
-        return payment;
+        return paymentRepository.save(payment);
     }
 
     @Transactional
@@ -60,21 +50,12 @@ public class PaymentTransactionManager {
     @Transactional
     public void cancelFailed(Payment payment, PortOneApiException exception) {
         payment.cancelFailed();
-        try {
-            paymentRepository.save(payment);
-        } catch (Exception e){
-
-        }
+        paymentRepository.save(payment);
     }
 
     @Transactional
     public Payment cancelSucceeded(Payment payment, String pgCancellationId, LocalDateTime cancelledAt) {
         payment.cancelSucceeded(pgCancellationId, cancelledAt);
-        try {
-            payment = paymentRepository.save(payment);
-        } catch (Exception e) {
-
-        }
-        return payment;
+        return paymentRepository.save(payment);
     }
 }
