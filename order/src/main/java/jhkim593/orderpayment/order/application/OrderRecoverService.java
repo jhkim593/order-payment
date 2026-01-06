@@ -1,5 +1,6 @@
 package jhkim593.orderpayment.order.application;
 
+import jhkim593.orderpayment.common.client.exception.ClientException;
 import jhkim593.orderpayment.common.client.payment.PaymentClient;
 import jhkim593.orderpayment.common.core.api.payment.PaymentDetailResponseDto;
 import jhkim593.orderpayment.order.application.required.OrderRepository;
@@ -64,6 +65,11 @@ public class OrderRecoverService {
                 orderTransactionManager.failed(order.getOrderId());
                 log.info("Order recovered to FAILED. orderId={}", order.getOrderId());
             }
+        } catch (ClientException e) {
+            if ("PAYMENT_NOT_FOUND".equals(e.getErrorCode())) {
+                orderTransactionManager.failed(order.getOrderId());
+                log.warn("Payment not found for order. Set order to FAILED. orderId={}", order.getOrderId());
+            }
         } catch (Exception e) {
             log.error("Failed to get payment status. orderId={}", order.getOrderId(), e);
         }
@@ -81,6 +87,8 @@ public class OrderRecoverService {
                 orderTransactionManager.cancelFailed(order.getOrderId());
                 log.info("Order cancel recovered to FAILED. orderId={}", order.getOrderId());
             }
+        } catch (ClientException e) {
+            log.error("Failed to get payment cancel status. orderId={}, errorCode={}", order.getOrderId(), e.getErrorCode(), e);
         } catch (Exception e) {
             log.error("Failed to get payment cancel status. orderId={}", order.getOrderId(), e);
         }

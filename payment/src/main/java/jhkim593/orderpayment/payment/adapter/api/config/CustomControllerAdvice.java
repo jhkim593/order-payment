@@ -1,37 +1,37 @@
 package jhkim593.orderpayment.payment.adapter.api.config;
 
+import jhkim593.orderpayment.common.core.api.ErrorResponseDto;
 import jhkim593.orderpayment.payment.domain.error.PaymentException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @ControllerAdvice
 @Slf4j
 public class CustomControllerAdvice {
 
     @ExceptionHandler(PaymentException.class)
-    public ResponseEntity<Map<String, Object>> handleCustomException(PaymentException e) {
+    public ResponseEntity<ErrorResponseDto> handleCustomException(PaymentException e) {
         log.warn("Custom Exception occurred: {}", e.getMessage(), e);
 
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("code", e.getErrorCode().getCode());
-        errorResponse.put("message", e.getErrorCode().getMessage());
+        ErrorResponseDto errorResponse = ErrorResponseDto.builder()
+                .code(e.getErrorCode().name())
+                .message(e.getErrorCode().getMessage())
+                .build();
 
         return ResponseEntity.status(e.getErrorCode().getStatus())
                 .body(errorResponse);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception e) {
+    public ResponseEntity<ErrorResponseDto> handleGlobalException(Exception e) {
         log.error("Unexpected Exception occurred: {}", e.getMessage(), e);
 
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("code", "E999");
-        errorResponse.put("message", "Internal Server Error");
+        ErrorResponseDto errorResponse = ErrorResponseDto.builder()
+                .code("E999")
+                .message("Internal Server Error")
+                .build();
 
         return ResponseEntity.status(500).body(errorResponse);
     }
