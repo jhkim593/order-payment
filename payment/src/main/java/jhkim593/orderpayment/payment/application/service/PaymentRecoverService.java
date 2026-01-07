@@ -63,7 +63,7 @@ public class PaymentRecoverService {
                 paymentTransactionManager.failed(payment, null);
             }
         } catch (PortOneApiException e){
-            if (e.getErrorResponse().getPgCode().equals("PAYMENT_NOT_FOUND")) {
+            if (e.getErrorResponse() != null && "PAYMENT_NOT_FOUND".equals(e.getErrorResponse().getType())) {
                 paymentTransactionManager.failed(payment, e);
             }
         }
