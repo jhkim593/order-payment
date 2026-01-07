@@ -39,7 +39,7 @@ public class PortOneClientConfig {
                 .client(new OkHttpClient())
                 .options(options)
                 .retryer(Retryer.NEVER_RETRY)
-                .encoder(new JacksonEncoder(objectMapper))
+                .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder(objectMapper))
                 .requestInterceptor(requestInterceptor())
                 .errorDecoder(errorDecoder)

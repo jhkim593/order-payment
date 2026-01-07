@@ -5,6 +5,8 @@ import jhkim593.orderpayment.common.client.payment.PaymentClient;
 import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.order.application.provided.OrderUpdater;
 import jhkim593.orderpayment.order.domain.Order;
+import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
+import jhkim593.orderpayment.order.domain.dto.CancelOrderResponseDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessResponseDto;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
@@ -64,6 +66,13 @@ public class OrderUpdateService implements OrderUpdater {
     @Override
     public void cancelFailedOrder(Long orderId) {
         orderTransactionManager.cancelFailed(orderId);
+    }
+
+    @Override
+    public CancelOrderResponseDto cancelOrder(Long orderId, CancelOrderRequestDto request) {
+        String reason = request.getReason() != null ? request.getReason() : "";
+        Order order = orderTransactionManager.canceling(orderId, reason);
+        return CancelOrderResponseDto.create(order);
     }
 
     private void updateSucceeded(Long orderId) {

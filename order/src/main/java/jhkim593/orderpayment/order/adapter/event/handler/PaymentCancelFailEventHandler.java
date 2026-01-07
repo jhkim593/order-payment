@@ -25,10 +25,7 @@ public class PaymentCancelFailEventHandler implements EventHandler<PaymentCancel
             orderUpdater.cancelFailedOrder(orderId);
             log.error("Payment cancel failed. orderId={}, reason={}", orderId, reason);
         } catch (OrderException e) {
-            if (ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED.equals(e.getErrorCode())) {
-                return;
-            }
-            throw e;
+            return;
         }
     }
 

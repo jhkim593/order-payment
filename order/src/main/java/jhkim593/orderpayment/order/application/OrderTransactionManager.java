@@ -57,7 +57,7 @@ public class OrderTransactionManager {
         Order order = orderRepository.find(orderId);
         order.succeeded();
         orderRepository.save(order);
-        eventPublisher.orderSucceeded(order);
+//        eventPublisher.orderSucceeded(order);
     }
 
     @Transactional
@@ -69,10 +69,15 @@ public class OrderTransactionManager {
 
     @Transactional
     public Order canceling(Long orderId) {
+        return canceling(orderId, "");
+    }
+
+    @Transactional
+    public Order canceling(Long orderId, String reason) {
         Order order = orderRepository.find(orderId);
         order.canceling();
         order = orderRepository.save(order);
-        eventPublisher.orderCancel(orderId, "");
+        eventPublisher.orderCancel(orderId, reason != null ? reason : "");
         return order;
     }
 

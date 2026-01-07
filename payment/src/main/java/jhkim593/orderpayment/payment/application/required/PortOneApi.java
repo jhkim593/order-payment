@@ -1,5 +1,6 @@
 package jhkim593.orderpayment.payment.application.required;
 
+import feign.Response;
 import jhkim593.orderpayment.payment.domain.dto.*;
 import feign.Headers;
 import feign.Param;
@@ -15,8 +16,7 @@ public interface PortOneApi {
 
     @RequestLine("POST /payments/{paymentId}/cancel")
     @Headers({
-        "Content-Type: application/json",
-        "Idempotency-Key: {paymentId}"
+        "Content-Type: application/json"
     })
     PortOneCancelPaymentResponseDto cancelPayment(@Param("paymentId") Long paymentId, PortOneCancelPaymentRequestDto request);
 

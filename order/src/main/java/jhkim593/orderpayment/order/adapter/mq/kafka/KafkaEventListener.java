@@ -25,7 +25,7 @@ public class KafkaEventListener {
             backoff = @Backoff(delay = 3000, multiplier = 2.0)
     )
     @KafkaListener(
-            topics = Topic.ORDER,
+            topics = Topic.PAYMENT,
             groupId = "${spring.kafka.consumer.group-id}"
     )
     public void handlePaymentEvent(String message) {
@@ -36,7 +36,6 @@ public class KafkaEventListener {
             eventHandlerFactory.get(eventData.getType()).handle(eventData);
         } catch (Exception e) {
             log.error("Failed to process payment event: {}", message, e);
-            // 재시도를 위해 acknowledge 하지 않음 (또는 DLQ로 보내기)
             throw e;
         }
     }

@@ -6,6 +6,7 @@ import jhkim593.orderpayment.common.core.event.EventType;
 import jhkim593.orderpayment.common.core.event.order.payload.OrderCancelEventPayload;
 import jhkim593.orderpayment.payment.adapter.event.EventHandler;
 import jhkim593.orderpayment.payment.application.provided.PaymentProcessor;
+import jhkim593.orderpayment.payment.domain.error.PaymentException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -30,9 +31,8 @@ public class OrderCancelEventHandler implements EventHandler<OrderCancelEventPay
 
             paymentProcessor.cancelPayment(orderId, request);
             log.info("Payment cancelled successfully. orderId={}", orderId);
-        } catch (Exception e) {
-            log.error("Failed to cancel payment. orderId={}", orderId, e);
-            throw e;
+        } catch (PaymentException e) {
+            return;
         }
     }
 
