@@ -8,16 +8,16 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreditOrderCompleteEventPayload implements EventPayload {
+public class CreditOrderSucceedEventPayload implements EventPayload {
     private Long userId;
     private Long orderId;
     private Integer creditAmount;
 
-    public static CreditOrderCompleteEventPayload create(
+    public static CreditOrderSucceedEventPayload create(
             Long userId,
             Long orderId,
             Integer creditAmount
     ) {
-        return new CreditOrderCompleteEventPayload(userId, orderId, creditAmount);
+        return new CreditOrderSucceedEventPayload(userId, orderId, creditAmount);
     }
 }
