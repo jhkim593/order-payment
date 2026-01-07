@@ -1,10 +1,8 @@
 package jhkim593.orderpayment.payment.adapter.client.portone;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.*;
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
-import feign.Feign;
-import feign.RedirectionInterceptor;
-import feign.RequestInterceptor;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.okhttp.OkHttpClient;
@@ -31,13 +29,16 @@ public class PortOneClientConfig {
     }
 
     public PortOneClientConfig(ObjectMapper objectMapper, PortOneClientErrorDecoder errorDecoder) {
-        okhttp3.OkHttpClient okHttpClient = new okhttp3.OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS)
-                .build();
+        Request.Options options = new Request.Options(
+                10, TimeUnit.SECONDS,
+                60, TimeUnit.SECONDS
+                ,true
+        );
 
         this.feignBuilder = Feign.builder()
-                .client(new OkHttpClient(okHttpClient))
+                .client(new OkHttpClient())
+                .options(options)
+                .retryer(Retryer.NEVER_RETRY)
                 .encoder(new JacksonEncoder(objectMapper))
                 .decoder(new JacksonDecoder(objectMapper))
                 .requestInterceptor(requestInterceptor())

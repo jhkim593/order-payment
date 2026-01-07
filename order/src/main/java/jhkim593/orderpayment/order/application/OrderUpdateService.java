@@ -1,11 +1,14 @@
 package jhkim593.orderpayment.order.application;
 
+import jhkim593.orderpayment.common.client.exception.ClientException;
 import jhkim593.orderpayment.common.client.payment.PaymentClient;
 import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.order.application.provided.OrderUpdater;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessResponseDto;
+import jhkim593.orderpayment.order.domain.error.ErrorCode;
+import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +35,13 @@ public class OrderUpdateService implements OrderUpdater {
             );
 
             paymentClient.billingKeyPayment(paymentRequest);
+        } catch (ClientException e) {
+            if ("PAYMENT_PROCESSING_DELAYED".equals(e.getErrorCode())) {
+                log.warn("Payment processing is delayed. Order remains PENDING. orderId={}", order.getOrderId());
+                throw new OrderException(ErrorCode.ORDER_PROCESSING_DELAYED);
+            }
+            updateFailed(order.getOrderId());
+            throw e;
         } catch (Exception e) {
             updateFailed(order.getOrderId());
             throw e;

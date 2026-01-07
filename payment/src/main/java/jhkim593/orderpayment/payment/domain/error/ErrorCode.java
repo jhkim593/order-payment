@@ -10,7 +10,8 @@ public enum ErrorCode {
     PAYMENT_NOT_SUCCEEDED("P002", 400,"payment not succeeded"),
     PAYMENT_NOT_PENDING("P003", 400,"payment not pending"),
     PAYMENT_NOT_CANCELING("P004", 400,"payment not canceling"),
-    PAYMENT_ALREADY_EXISTS("P005", 400,"payment already exists for this order");
+    PAYMENT_ALREADY_EXISTS("P005", 400,"payment already exists for this order"),
+    PAYMENT_PROCESSING_DELAYED("P006", 503,"payment processing is delayed, please check later");
 
     private final String code;
     private final int status;

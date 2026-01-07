@@ -8,7 +8,8 @@ public enum ErrorCode {
     ORDER_NOT_FOUND("O001", 404, "order not found"),
     ORDER_ALREADY_COMPLETED("O002", 400, "order already completed"),
     ORDER_ALREADY_CANCEL_COMPLETED("O003", 400, "order already cancel completed"),
-    ORDER_NOT_SUCCEEDED("O004", 400, "order not succeeded");
+    ORDER_NOT_SUCCEEDED("O004", 400, "order not succeeded"),
+    ORDER_PROCESSING_DELAYED("O005", 503, "order processing is delayed, please check later");
 
     private String code;
     private int status;

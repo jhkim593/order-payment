@@ -2,10 +2,12 @@ package jhkim593.orderpayment.payment.application.service;
 
 import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.common.core.api.payment.CancelPaymentRequestDto;
+import jhkim593.orderpayment.payment.adapter.client.portone.PortOneApiManager;
 import jhkim593.orderpayment.payment.application.provided.PaymentProcessor;
-import jhkim593.orderpayment.payment.application.required.PortOneApi;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.dto.*;
+import jhkim593.orderpayment.payment.domain.error.ErrorCode;
+import jhkim593.orderpayment.payment.domain.error.PaymentException;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +20,7 @@ import java.time.LocalDateTime;
 @Slf4j
 public class PaymentProcessService implements PaymentProcessor {
     private final PaymentTransactionManager paymentTransactionManager;
-    private final PortOneApi portOneApi;
+    private final PortOneApiManager portOneApiManager;
 
     @Override
     public Payment billingKeyPayment(BillingKeyPaymentRequestDto request) {
@@ -29,9 +31,20 @@ public class PaymentProcessService implements PaymentProcessor {
 
         PortOneBillingKeyPaymentResponseDto response;
         try {
-            response = portOneApi.billingKeyPayment(payment.getPaymentId(), clientRequest);
+            response = portOneApiManager.billingKeyPayment(payment.getPaymentId(), clientRequest);
+        } catch (PaymentException e) {
+            if (ErrorCode.PAYMENT_PROCESSING_DELAYED.equals(e.getErrorCode())) {
+                log.warn("Payment processing delayed. Payment remains PENDING. paymentId={}", payment.getPaymentId());
+                throw e;
+            }
+            updateFailed(payment, new PortOneApiException(500, e.getMessage()));
+            throw e;
         } catch (PortOneApiException e) {
             updateFailed(payment, e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error during payment processing. paymentId={}", payment.getPaymentId(), e);
+            updateFailed(payment, new PortOneApiException(500, "Unexpected error: " + e.getMessage()));
             throw e;
         }
         payment = updateSucceeded(payment, response.getPayment().getPgTxId(), response.getPayment().getPaidAt());
@@ -47,9 +60,21 @@ public class PaymentProcessService implements PaymentProcessor {
 
         PortOneCancelPaymentResponseDto response;
         try {
-            response = portOneApi.cancelPayment(payment.getPaymentId(), cancelRequest);
+            response = portOneApiManager.cancelPayment(payment.getPaymentId(), cancelRequest);
+        } catch (PaymentException e) {
+            if (ErrorCode.PAYMENT_PROCESSING_DELAYED.equals(e.getErrorCode())) {
+                log.warn("Payment cancel processing delayed. paymentId={}", payment.getPaymentId());
+                throw e;
+            }
+            updateCancelFailed(payment, new PortOneApiException(500, e.getMessage()));
+            throw e;
         } catch (PortOneApiException e) {
             updateCancelFailed(payment, e);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("Unexpected error during payment processing. paymentId={}", payment.getPaymentId(), e);
+            updateCancelFailed(payment, new PortOneApiException(500, "Unexpected error: " + e.getMessage()));
             throw e;
         }
         payment = updateCancelSucceeded(payment, response.getCancellation().getPgCancellationId(), response.getCancellation().getCancelledAt());
