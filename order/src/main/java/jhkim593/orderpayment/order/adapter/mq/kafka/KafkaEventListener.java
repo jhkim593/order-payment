@@ -3,6 +3,7 @@ package jhkim593.orderpayment.order.adapter.mq.kafka;
 import jhkim593.orderpayment.common.core.event.EventData;
 import jhkim593.orderpayment.common.core.event.Topic;
 import jhkim593.orderpayment.common.core.event.EventPayload;
+import jhkim593.orderpayment.order.adapter.event.EventHandler;
 import jhkim593.orderpayment.order.adapter.event.EventHandlerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,9 @@ public class KafkaEventListener {
             log.info("Received payment event: {}", message);
 
             EventData<EventPayload> eventData = EventData.fromJson(message);
-            eventHandlerFactory.get(eventData.getType()).handle(eventData);
+            EventHandler eventHandler = eventHandlerFactory.get(eventData.getType());
+            if(eventHandler == null) return;
+            eventHandler.handle(eventData);
         } catch (Exception e) {
             log.error("Failed to process payment event: {}", message, e);
             throw e;

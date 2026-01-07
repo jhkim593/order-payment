@@ -57,7 +57,7 @@ public class OrderTransactionManager {
         Order order = orderRepository.find(orderId);
         order.succeeded();
         orderRepository.save(order);
-//        eventPublisher.orderSucceeded(order);
+        eventPublisher.orderSucceeded(order);
     }
 
     @Transactional

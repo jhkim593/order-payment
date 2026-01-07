@@ -1,10 +1,10 @@
 package jhkim593.orderpayment.order.application.event;
 
 import jhkim593.orderpayment.common.core.event.order.CreditOrderCancelSucceedEvent;
-import jhkim593.orderpayment.common.core.event.order.CreditOrderCompleteEvent;
+import jhkim593.orderpayment.common.core.event.order.CreditOrderSucceedEvent;
 import jhkim593.orderpayment.common.core.event.order.OrderCancelEvent;
 import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderCancelSucceedEventPayload;
-import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderCompleteEventPayload;
+import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderSucceedEventPayload;
 import jhkim593.orderpayment.common.core.event.order.payload.OrderCancelEventPayload;
 import jhkim593.orderpayment.common.core.snowflake.IdGenerator;
 import jhkim593.orderpayment.order.domain.*;
@@ -48,9 +48,9 @@ public class InternalEventPublisher {
 
     private void publishCreditOrderCompleteEvent(Order order, CreditProduct creditProduct) {
         eventPublisher.publishEvent(
-                new CreditOrderCompleteEvent(
+                new CreditOrderSucceedEvent(
                         idGenerator.getId(),
-                        new CreditOrderCompleteEventPayload(
+                        new CreditOrderSucceedEventPayload(
                                 order.getUserId(),
                                 order.getOrderId(),
                                 creditProduct.getCreditAmount()
