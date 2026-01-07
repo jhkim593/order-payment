@@ -41,6 +41,26 @@ services:
       timeout: 5s
       retries: 5
 
+  # PostgreSQL for User Service
+  user-db:
+    image: postgres:15-alpine
+    container_name: user-db
+    environment:
+      POSTGRES_DB: user
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: a1234567!
+    ports:
+      - "30036:5432"
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    networks:
+      - order-payment-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Kafka (KRaft mode - no Zookeeper needed)
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -88,6 +108,7 @@ services:
 volumes:
   order-db-data:
   payment-db-data:
+  user-db-data:
 
 networks:
   order-payment-network:
