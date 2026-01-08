@@ -36,23 +36,7 @@ public class OrderRecoverService {
             }
         }
     }
-
-    @Scheduled(
-            fixedDelay = 10,
-            timeUnit = TimeUnit.SECONDS
-    )
-    public void updateCancelingOrders() {
-        List<Order> cancelingOrders = orderRepository.findCancelingOrders(30);
-
-        for (Order order : cancelingOrders) {
-            try {
-                checkCancelPaymentStatus(order);
-            } catch (Exception e) {
-                log.error("Failed to check cancel order status. orderId={}", order.getOrderId(), e);
-            }
-        }
-    }
-
+    
     private void checkPaymentStatus(Order order) {
         try {
             PaymentDetailResponseDto payment = paymentClient.getPaymentByOrderId(order.getOrderId());
@@ -72,25 +56,6 @@ public class OrderRecoverService {
             }
         } catch (Exception e) {
             log.error("Failed to get payment status. orderId={}", order.getOrderId(), e);
-        }
-    }
-
-    private void checkCancelPaymentStatus(Order order) {
-        try {
-            PaymentDetailResponseDto payment = paymentClient.getPaymentByOrderId(order.getOrderId());
-
-            String status = payment.getStatus();
-            if ("CANCEL_SUCCEEDED".equals(status)) {
-                orderTransactionManager.cancelSucceeded(order.getOrderId());
-                log.info("Order cancel recovered to SUCCEEDED. orderId={}", order.getOrderId());
-            } else if ("CANCEL_FAILED".equals(status)) {
-                orderTransactionManager.cancelFailed(order.getOrderId());
-                log.info("Order cancel recovered to FAILED. orderId={}", order.getOrderId());
-            }
-        } catch (ClientException e) {
-            log.error("Failed to get payment cancel status. orderId={}, errorCode={}", order.getOrderId(), e.getErrorCode(), e);
-        } catch (Exception e) {
-            log.error("Failed to get payment cancel status. orderId={}", order.getOrderId(), e);
         }
     }
 }

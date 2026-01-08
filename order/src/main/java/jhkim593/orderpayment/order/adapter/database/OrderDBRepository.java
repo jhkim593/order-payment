@@ -7,6 +7,7 @@ import jhkim593.orderpayment.order.application.required.OrderRepository;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.OrderStatus;
 import jhkim593.orderpayment.order.domain.QOrder;
+import jhkim593.orderpayment.order.domain.QOrderProduct;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
@@ -28,16 +29,34 @@ public class OrderDBRepository implements OrderRepository {
 
     @Override
     public Order find(Long id) {
-        return orderJpaRepository.findById(id).orElseThrow(() -> new OrderException(ErrorCode.ORDER_NOT_FOUND));
+        QOrder order = QOrder.order;
+        QOrderProduct orderProduct = QOrderProduct.orderProduct;
+
+        Order result = jpaQueryFactory
+                .selectFrom(order)
+                .distinct()
+                .leftJoin(order.orderProducts, orderProduct).fetchJoin()
+                .leftJoin(orderProduct.product).fetchJoin()
+                .where(order.orderId.eq(id))
+                .fetchOne();
+
+        if (result == null) {
+            throw new OrderException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        return result;
     }
 
     @Override
     public Order findByUserId(Long userId) {
         QOrder order = QOrder.order;
+        QOrderProduct orderProduct = QOrderProduct.orderProduct;
 
         Order result = jpaQueryFactory
                 .selectFrom(order)
-                .leftJoin(order.orderProducts).fetchJoin()
+                .distinct()
+                .leftJoin(order.orderProducts, orderProduct).fetchJoin()
+                .leftJoin(orderProduct.product).fetchJoin()
                 .where(order.userId.eq(userId))
                 .fetchOne();
 
@@ -57,22 +76,6 @@ public class OrderDBRepository implements OrderRepository {
                 .from(order)
                 .where(
                         statusEq(order, OrderStatus.PENDING),
-                        statusUpdatedAtBefore(order, second)
-                )
-                .orderBy(order.orderId.asc())
-                .limit(100)
-                .fetch();
-    }
-
-    @Override
-    public List<Order> findCancelingOrders(int second) {
-        QOrder order = QOrder.order;
-
-        return jpaQueryFactory
-                .select(order)
-                .from(order)
-                .where(
-                        statusEq(order, OrderStatus.CANCELING),
                         statusUpdatedAtBefore(order, second)
                 )
                 .orderBy(order.orderId.asc())

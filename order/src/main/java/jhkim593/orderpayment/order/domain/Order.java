@@ -116,4 +116,7 @@ public class Order {
     private boolean isSuccess(){
         return OrderStatus.SUCCEEDED.equals(status);
     }
+    private boolean isCanceling(){
+        return OrderStatus.CANCELING.equals(status);
+    }
 }

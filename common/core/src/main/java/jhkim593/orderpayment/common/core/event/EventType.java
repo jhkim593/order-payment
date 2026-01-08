@@ -3,8 +3,8 @@ package jhkim593.orderpayment.common.core.event;
 import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderCancelSucceedEventPayload;
 import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderSucceedEventPayload;
 import jhkim593.orderpayment.common.core.event.order.payload.OrderCancelEventPayload;
-import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelFailEventPayload;
-import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelSuccessEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelFailedEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelSucceededEventPayload;
 import jhkim593.orderpayment.common.core.event.payment.payload.PaymentFailEventPayload;
 import jhkim593.orderpayment.common.core.event.payment.payload.PaymentSuccessEventPayload;
 import lombok.Getter;
@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 public enum EventType {
     PAYMENT_SUCCESS(PaymentSuccessEventPayload.class, Topic.PAYMENT),
     PAYMENT_FAIL(PaymentFailEventPayload.class, Topic.PAYMENT),
-    PAYMENT_CANCEL_SUCCESS(PaymentCancelSuccessEventPayload.class, Topic.PAYMENT),
-    PAYMENT_CANCEL_FAIL(PaymentCancelFailEventPayload.class, Topic.PAYMENT),
+    PAYMENT_CANCEL_SUCCEEDED(PaymentCancelSucceededEventPayload.class, Topic.PAYMENT),
+    PAYMENT_CANCEL_FAILED(PaymentCancelFailedEventPayload.class, Topic.PAYMENT),
     ORDER_CANCEL(OrderCancelEventPayload.class, Topic.ORDER),
     CREDIT_ORDER_SUCCEED(CreditOrderSucceedEventPayload.class, Topic.ORDER),
     CREDIT_ORDER_CANCEL_SUCCEED(CreditOrderCancelSucceedEventPayload.class, Topic.ORDER);

@@ -8,11 +8,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentCancelSuccessEventPayload implements EventPayload {
+public class PaymentCancelSucceededEventPayload implements EventPayload {
     private Long paymentId;
     private Long orderId;
 
-    public static PaymentCancelSuccessEventPayload create(Long paymentId, Long orderId) {
-        return new PaymentCancelSuccessEventPayload(paymentId, orderId);
+    public static PaymentCancelSucceededEventPayload create(Long paymentId, Long orderId) {
+        return new PaymentCancelSucceededEventPayload(paymentId, orderId);
     }
 }

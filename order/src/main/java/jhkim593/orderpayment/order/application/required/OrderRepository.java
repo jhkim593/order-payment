@@ -9,5 +9,4 @@ public interface OrderRepository {
     Order find(Long id);
     Order findByUserId(Long userId);
     List<Order> findPendingOrders(int second);
-    List<Order> findCancelingOrders(int second);
 }

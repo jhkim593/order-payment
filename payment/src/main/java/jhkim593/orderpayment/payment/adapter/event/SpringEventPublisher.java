@@ -1,7 +1,11 @@
 package jhkim593.orderpayment.payment.adapter.event;
 
+import jhkim593.orderpayment.common.core.event.payment.PaymentCancelFailedEvent;
+import jhkim593.orderpayment.common.core.event.payment.PaymentCancelSucceededEvent;
 import jhkim593.orderpayment.common.core.event.payment.PaymentFailEvent;
 import jhkim593.orderpayment.common.core.event.payment.PaymentSuccessEvent;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelFailedEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelSucceededEventPayload;
 import jhkim593.orderpayment.common.core.event.payment.payload.PaymentFailEventPayload;
 import jhkim593.orderpayment.common.core.event.payment.payload.PaymentSuccessEventPayload;
 import jhkim593.orderpayment.common.core.snowflake.IdGenerator;
@@ -18,21 +22,21 @@ public class SpringEventPublisher implements InternalEventPublisher {
     private final IdGenerator idGenerator;
 
     @Override
-    public void paymentFailEventPublish(Payment payment){
+    public void paymentCancelFailedEventPublish(Payment payment){
         applicationEventPublisher.publishEvent(
-                new PaymentFailEvent(
+                new PaymentCancelFailedEvent(
                         idGenerator.getId(),
-                        PaymentFailEventPayload.create(payment.getPaymentId(), payment.getOrderId())
+                        PaymentCancelFailedEventPayload.create(payment.getPaymentId(), payment.getOrderId())
                 )
         );
     }
 
     @Override
-    public void paymentSuccessEventPublish(Payment payment){
+    public void paymentCancelSucceededEventPublish(Payment payment){
         applicationEventPublisher.publishEvent(
-                new PaymentSuccessEvent(
+                new PaymentCancelSucceededEvent(
                         idGenerator.getId(),
-                        PaymentSuccessEventPayload.create(payment.getPaymentId(), payment.getOrderId())
+                        PaymentCancelSucceededEventPayload.create(payment.getPaymentId(), payment.getOrderId())
                 )
         );
     }

@@ -68,11 +68,6 @@ public class OrderTransactionManager {
     }
 
     @Transactional
-    public Order canceling(Long orderId) {
-        return canceling(orderId, "");
-    }
-
-    @Transactional
     public Order canceling(Long orderId, String reason) {
         Order order = orderRepository.find(orderId);
         order.canceling();

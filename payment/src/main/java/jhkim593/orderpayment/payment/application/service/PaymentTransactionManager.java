@@ -2,6 +2,7 @@ package jhkim593.orderpayment.payment.application.service;
 
 import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.common.core.snowflake.IdGenerator;
+import jhkim593.orderpayment.payment.application.event.InternalEventPublisher;
 import jhkim593.orderpayment.payment.application.provided.PaymentMethodFinder;
 import jhkim593.orderpayment.payment.application.required.PaymentRepository;
 import jhkim593.orderpayment.payment.domain.Payment;
@@ -21,6 +22,7 @@ public class PaymentTransactionManager {
     private final PaymentRepository paymentRepository;
     private final PaymentMethodFinder paymentMethodFinder;
     private final IdGenerator idGenerator;
+    private final InternalEventPublisher eventPublisher;
 
     @Transactional
     public Payment create(BillingKeyPaymentRequestDto request){
@@ -55,12 +57,15 @@ public class PaymentTransactionManager {
     public void cancelFailed(Payment payment, PortOneApiException exception) {
         payment.cancelFailed();
         paymentRepository.save(payment);
+        eventPublisher.paymentCancelFailedEventPublish(payment);
     }
 
     @Transactional
     public Payment cancelSucceeded(Payment payment, String pgCancellationId, LocalDateTime cancelledAt) {
         payment.cancelSucceeded(pgCancellationId, cancelledAt);
-        return paymentRepository.save(payment);
+        payment = paymentRepository.save(payment);
+        eventPublisher.paymentCancelSucceededEventPublish(payment);
+        return payment;
     }
 
     private void validateDuplicatePaymentByOrderId(Long orderId) {

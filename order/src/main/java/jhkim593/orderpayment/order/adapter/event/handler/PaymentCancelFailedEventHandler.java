@@ -2,7 +2,7 @@ package jhkim593.orderpayment.order.adapter.event.handler;
 
 import jhkim593.orderpayment.common.core.event.EventData;
 import jhkim593.orderpayment.common.core.event.EventType;
-import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelSuccessEventPayload;
+import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelFailedEventPayload;
 import jhkim593.orderpayment.order.adapter.event.EventHandler;
 import jhkim593.orderpayment.order.application.provided.OrderUpdater;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
@@ -14,15 +14,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PaymentCancelSuccessEventHandler implements EventHandler<PaymentCancelSuccessEventPayload> {
+public class PaymentCancelFailedEventHandler implements EventHandler<PaymentCancelFailedEventPayload> {
     private final OrderUpdater orderUpdater;
 
     @Override
-    public void handle(EventData<PaymentCancelSuccessEventPayload> eventData) {
+    public void handle(EventData<PaymentCancelFailedEventPayload> eventData) {
         try {
             Long orderId = eventData.getPayload().getOrderId();
-            orderUpdater.cancelSucceededOrder(orderId);
-            log.info("Payment cancel success handled. orderId={}", orderId);
+            orderUpdater.cancelFailedOrder(orderId);
+            log.error("Payment cancel failed. orderId={}", orderId);
         } catch (OrderException e) {
             return;
         }
@@ -30,6 +30,6 @@ public class PaymentCancelSuccessEventHandler implements EventHandler<PaymentCan
 
     @Override
     public EventType getType() {
-        return EventType.PAYMENT_CANCEL_SUCCESS;
+        return EventType.PAYMENT_CANCEL_FAILED;
     }
 }

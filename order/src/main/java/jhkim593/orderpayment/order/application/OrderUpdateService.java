@@ -54,11 +54,6 @@ public class OrderUpdateService implements OrderUpdater {
     }
 
     @Override
-    public void cancelingOrder(Long orderId) {
-        orderTransactionManager.canceling(orderId);
-    }
-
-    @Override
     public void cancelSucceededOrder(Long orderId) {
         orderTransactionManager.cancelSucceeded(orderId);
     }
