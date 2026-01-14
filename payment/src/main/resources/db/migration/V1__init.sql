@@ -55,3 +55,9 @@ CREATE TABLE payment_history
 -- Test data
 INSERT INTO payment_method (user_id, pg_provider, payment_type, billing_key, is_default, is_active, created_at, updated_at)
 VALUES (1, 'PAYPAL', 'CARD', 'billing-key-019a6c29-6944-fd02-80fb-fe67791fdd2a', true, true, NOW(), NOW());
+
+INSERT INTO payment_method (user_id, pg_provider, payment_type, billing_key, is_default, is_active, created_at, updated_at)
+VALUES (1, 'PAYPAL', 'CARD', 'billing-key-019bb65b-49b0-ed2b-a913-57cf22335baa', false, true, NOW(), NOW());
+
+INSERT INTO payment_method (user_id, pg_provider, payment_type, billing_key, is_default, is_active, created_at, updated_at)
+VALUES (1, 'PAYPAL', 'CARD', 'billing-key-019bb9ad-1db2-0cbe-2f1d-caa2070dbf76', false, true, NOW(), NOW());
