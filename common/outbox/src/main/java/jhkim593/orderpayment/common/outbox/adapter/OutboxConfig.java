@@ -1,9 +1,6 @@
 package jhkim593.orderpayment.common.outbox.adapter;
 
-import jhkim593.orderpayment.common.core.event.Topic;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -11,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -56,17 +52,5 @@ public class OutboxConfig {
     @Bean
     public Executor messageRelayPublishPendingEventExecutor() {
         return Executors.newSingleThreadScheduledExecutor();
-    }
-
-    @Bean
-    public NewTopic paymentTopic() {
-        return TopicBuilder.name(Topic.PAYMENT)
-                .partitions(3)                          // 파티션 수 설정
-                .replicas(1)                             // 복제 팩터 설정 (1)
-                .config(                                            // 추가 설정
-                        TopicConfig.RETENTION_MS_CONFIG,
-                        String.valueOf(30 * 24 * 60 * 60 * 1000L)  // 30일
-                )
-                .build();
     }
 }
