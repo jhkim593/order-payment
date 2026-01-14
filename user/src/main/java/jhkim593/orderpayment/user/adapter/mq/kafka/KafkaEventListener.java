@@ -28,11 +28,12 @@ public class KafkaEventListener {
     )
     public void handleOrderEvent(String message) {
         try {
-            log.info("Received order event: {}", message);
-
             EventData<EventPayload> eventData = EventData.fromJson(message);
             EventHandler eventHandler = eventHandlerFactory.get(eventData.getType());
+
             if(eventHandler == null) return;
+            log.info("Received order event: {}", message);
+
             eventHandler.handle(eventData);
         } catch (Exception e) {
             log.error("Failed to process order event: {}", message, e);

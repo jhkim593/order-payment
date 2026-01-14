@@ -31,11 +31,12 @@ public class KafkaEventListener {
     )
     public void handlePaymentEvent(String message) {
         try {
-            log.info("Received payment event: {}", message);
-
             EventData<EventPayload> eventData = EventData.fromJson(message);
             EventHandler eventHandler = eventHandlerFactory.get(eventData.getType());
+
             if(eventHandler == null) return;
+            log.info("Received payment event: {}", message);
+
             eventHandler.handle(eventData);
         } catch (Exception e) {
             log.error("Failed to process payment event: {}", message, e);
