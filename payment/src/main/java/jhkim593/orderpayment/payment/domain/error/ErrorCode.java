@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
     PAYMENT_METHOD_NOT_FOUND("PM001", 404,"payment method not found"),
+    PAYMENT_METHOD_NOT_OWNED("PM002", 403,"payment method not owned by user"),
     PAYMENT_NOT_FOUND("P001", 404,"payment not found"),
     PAYMENT_NOT_SUCCEEDED("P002", 400,"payment not succeeded"),
     PAYMENT_NOT_PENDING("P003", 400,"payment not pending"),

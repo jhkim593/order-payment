@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface PaymentMethodFinder {
     List<PaymentMethodDetailDto> findAll(Long userId);
-    PaymentMethod find(Long paymentMethodId);
+    PaymentMethod find(Long paymentMethodId, Long userId);
 }

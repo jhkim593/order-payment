@@ -28,7 +28,7 @@ public class PaymentTransactionManager {
     public Payment create(BillingKeyPaymentRequestDto request){
         validateDuplicatePaymentByOrderId(request.getOrderId());
 
-        PaymentMethod paymentMethod = paymentMethodFinder.find(request.getPaymentMethodId());
+        PaymentMethod paymentMethod = paymentMethodFinder.find(request.getPaymentMethodId(), request.getUserId());
 
         Payment payment = Payment.create(idGenerator.getId(), paymentMethod, request);
         return paymentRepository.save(payment);
