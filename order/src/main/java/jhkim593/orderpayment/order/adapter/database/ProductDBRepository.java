@@ -1,10 +1,8 @@
 package jhkim593.orderpayment.order.adapter.database;
 
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import jhkim593.orderpayment.order.adapter.database.jpa.ProductJpaRepository;
 import jhkim593.orderpayment.order.application.required.ProductRepository;
 import jhkim593.orderpayment.order.domain.Product;
-import jhkim593.orderpayment.order.domain.QProduct;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;

@@ -10,10 +10,12 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@Component
-@RequiredArgsConstructor
 public class PortOneClientErrorDecoder implements ErrorDecoder {
     private final ObjectMapper objectMapper;
+
+    public PortOneClientErrorDecoder(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public PortOneApiException decode(String methodKey, Response response) {

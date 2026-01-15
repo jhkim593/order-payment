@@ -1,9 +1,11 @@
 package jhkim593.orderpayment.common.client.payment;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import feign.Feign;
 import feign.RedirectionInterceptor;
-import feign.Retryer;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import jhkim593.orderpayment.common.client.FeignErrorDecoder;
@@ -19,13 +21,16 @@ public class PaymentClientConfig {
 
     private final Feign.Builder feignBuilder;
 
-    public PaymentClientConfig(ObjectMapper objectMapper) {
+    public PaymentClientConfig() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
         this.feignBuilder = Feign.builder()
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder(objectMapper))
                 .errorDecoder(new FeignErrorDecoder(objectMapper))
-//                // 1초 간격으로 시작해 최대 3초 간격으로 점점 증가하며 최대 3번 재시도
-//                .retryer(new Retryer.Default(1000L, 3000L, 3))
                 .responseInterceptor(new RedirectionInterceptor());
     }
 
