@@ -1,6 +1,9 @@
 package jhkim593.orderpayment.payment.adapter.client.portone;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import feign.*;
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
 import feign.jackson.JacksonDecoder;
@@ -28,7 +31,12 @@ public class PortOneClientConfig {
         return feignBuilder.target(PortOneApi.class, url);
     }
 
-    public PortOneClientConfig(ObjectMapper objectMapper, PortOneClientErrorDecoder errorDecoder) {
+    public PortOneClientConfig() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
         Request.Options options = new Request.Options(
                 10, TimeUnit.SECONDS,
                 60, TimeUnit.SECONDS
@@ -42,7 +50,7 @@ public class PortOneClientConfig {
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder(objectMapper))
                 .requestInterceptor(requestInterceptor())
-                .errorDecoder(errorDecoder)
+                .errorDecoder(new PortOneClientErrorDecoder(objectMapper))
                 .responseInterceptor(new RedirectionInterceptor());
     }
 

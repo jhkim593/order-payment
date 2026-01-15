@@ -7,9 +7,9 @@ import jhkim593.orderpayment.payment.adapter.event.EventHandler;
 import jhkim593.orderpayment.payment.adapter.event.EventHandlerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.BackOff;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
-import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -20,7 +20,7 @@ public class KafkaEventListener {
 
     @RetryableTopic(
             attempts = "3",
-            backoff = @Backoff(delay = 3000, multiplier = 2.0)
+            backOff = @BackOff(delay = 3000, multiplier = 2.0)
     )
     @KafkaListener(
             topics = Topic.ORDER,
