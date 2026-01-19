@@ -6,6 +6,7 @@ import jhkim593.orderpayment.common.core.event.Topic;
 import jhkim593.orderpayment.user.adapter.event.EventHandler;
 import jhkim593.orderpayment.user.adapter.event.EventHandlerFactory;
 import org.springframework.kafka.annotation.BackOff;
+import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import lombok.RequiredArgsConstructor;
@@ -38,5 +39,10 @@ public class KafkaEventListener {
         } catch (Exception e) {
             log.error("Failed to process order event: {}", message, e);
         }
+    }
+
+    @DltHandler
+    public void handleDlt(String message) {
+        log.error("DLT received: {}", message);
     }
 }
