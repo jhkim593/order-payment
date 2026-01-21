@@ -24,15 +24,8 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    implementation 'io.github.openfeign:feign-core:13.5'
-    implementation 'io.github.openfeign:feign-jackson:13.5'
-    implementation 'io.github.openfeign:feign-okhttp:13.5'
-    implementation 'io.github.openfeign:feign-slf4j:13.5'
-
-    implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

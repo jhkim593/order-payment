@@ -48,6 +48,7 @@ public class KafkaConfig {
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(3);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
+        factory.getContainerProperties().setObservationEnabled(true);
         return factory;
     }
 
@@ -58,6 +59,8 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.ACKS_CONFIG, "all");
-        return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(configProps));
+        KafkaTemplate<String, String> kafkaTemplate = new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(configProps));
+        kafkaTemplate.setObservationEnabled(true);
+        return kafkaTemplate;
     }
 }

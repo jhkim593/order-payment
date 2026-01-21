@@ -1,21 +1,22 @@
 package jhkim593.orderpayment.payment.adapter.client.portone;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import feign.*;
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
-import feign.okhttp.OkHttpClient;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
+import tools.jackson.databind.ObjectMapper;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 @Configuration
+@RequiredArgsConstructor
 public class PortOneClientConfig {
 
     @Value("${portone.api.url}")
@@ -24,39 +25,26 @@ public class PortOneClientConfig {
     @Value("${portone.api.secret}")
     private String secret;
 
-    private Feign.Builder feignBuilder;
-
     @Bean
-    public PortOneApi portOneClient() {
-        return feignBuilder.target(PortOneApi.class, url);
+    public PortOneApi portOneClient(ObjectMapper objectMapper, RestClient.Builder restClientBuilder) {
+        RestClient restClient = restClientBuilder
+                .baseUrl(url)
+                .requestFactory(clientHttpRequestFactory())
+                .defaultHeader("Authorization", "PortOne " + secret)
+                .defaultStatusHandler(HttpStatusCode::isError, new PortOneClientErrorHandler(objectMapper).handler())
+                .build();
+
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory
+                .builderFor(RestClientAdapter.create(restClient))
+                .build();
+
+        return factory.createClient(PortOneApi.class);
     }
 
-    public PortOneClientConfig() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        Request.Options options = new Request.Options(
-                10, TimeUnit.SECONDS,
-                60, TimeUnit.SECONDS
-                ,true
-        );
-
-        this.feignBuilder = Feign.builder()
-                .client(new OkHttpClient())
-                .options(options)
-                .retryer(Retryer.NEVER_RETRY)
-                .encoder(new JacksonEncoder())
-                .decoder(new JacksonDecoder(objectMapper))
-                .requestInterceptor(requestInterceptor())
-                .errorDecoder(new PortOneClientErrorDecoder(objectMapper))
-                .responseInterceptor(new RedirectionInterceptor());
-    }
-
-    private RequestInterceptor requestInterceptor() {
-        return requestTemplate -> {
-            requestTemplate.header("Authorization", "PortOne "+ secret);
-        };
+    private ClientHttpRequestFactory clientHttpRequestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(10));
+        factory.setReadTimeout(Duration.ofSeconds(60));
+        return factory;
     }
 }

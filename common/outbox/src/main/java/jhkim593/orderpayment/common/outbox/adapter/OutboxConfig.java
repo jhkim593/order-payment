@@ -8,11 +8,14 @@ import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.HashMap;
@@ -38,7 +41,9 @@ public class OutboxConfig {
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.ACKS_CONFIG, "all");
-        return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(configProps));
+        KafkaTemplate<String, String> kafkaTemplate = new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(configProps));
+        kafkaTemplate.setObservationEnabled(true);
+        return kafkaTemplate;
     }
 
     @Bean
@@ -48,6 +53,7 @@ public class OutboxConfig {
         executor.setMaxPoolSize(50);
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix("mr-pub-event-");
+        executor.setTaskDecorator(new ContextPropagatingTaskDecorator());
         return executor;
     }
 

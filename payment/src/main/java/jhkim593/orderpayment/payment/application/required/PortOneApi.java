@@ -1,27 +1,27 @@
 package jhkim593.orderpayment.payment.application.required;
 
-import feign.Response;
 import jhkim593.orderpayment.payment.domain.dto.*;
-import feign.Headers;
-import feign.Param;
-import feign.RequestLine;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
+@HttpExchange("/payments")
 public interface PortOneApi {
-    @RequestLine("POST /payments/{paymentId}/billing-key")
-    @Headers({
-        "Content-Type: application/json",
-        "Idempotency-Key: {paymentId}"
-    })
-    PortOneBillingKeyPaymentResponseDto billingKeyPayment(@Param("paymentId") Long paymentId, PortOneBillingKeyPaymentRequestDto request);
 
-    @RequestLine("POST /payments/{paymentId}/cancel")
-    @Headers({
-        "Content-Type: application/json"
-    })
-    PortOneCancelPaymentResponseDto cancelPayment(@Param("paymentId") Long paymentId, PortOneCancelPaymentRequestDto request);
+    @PostExchange("/{paymentId}/billing-key")
+    PortOneBillingKeyPaymentResponseDto billingKeyPayment(
+            @PathVariable Long paymentId,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @RequestBody PortOneBillingKeyPaymentRequestDto request);
 
+    @PostExchange("/{paymentId}/cancel")
+    PortOneCancelPaymentResponseDto cancelPayment(
+            @PathVariable Long paymentId,
+            @RequestBody PortOneCancelPaymentRequestDto request);
 
-    @RequestLine("GET /payments/{paymentId}")
-    PortOneGetPaymentResponseDto getPayment(@Param Long paymentId);
+    @GetExchange("/{paymentId}")
+    PortOneGetPaymentResponseDto getPayment(@PathVariable Long paymentId);
 }
-

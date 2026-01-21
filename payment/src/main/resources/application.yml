@@ -28,3 +28,29 @@ spring:
 
 server:
   port: 8082
+
+portone:
+  api:
+    url: https://api.portone.io
+    secret: Ww6s1RRhbQHgLsovpVZCVNmR0eF7dKUe30FVThYQknstaQAAvOsz9A8hAxHxUEXgq96CJgqjxcLuLdZX
+  store:
+    id: store-42931a45-dea7-4099-9727-a891d07e8310
+
+
+management:
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces
+    logging:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/logs
+  otlp:
+    metrics:
+      export:
+        url: http://localhost:4318/v1/metrics
+  tracing:
+    sampling:
+      probability: 1.0

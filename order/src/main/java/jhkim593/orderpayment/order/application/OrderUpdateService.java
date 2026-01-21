@@ -13,6 +13,7 @@ import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 public class OrderUpdateService implements OrderUpdater {
     private final OrderTransactionManager orderTransactionManager;
     private final PaymentClient paymentClient;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
     public OrderProcessResponseDto processOrder(OrderProcessRequestDto request) {

@@ -1,7 +1,5 @@
 package jhkim593.orderpayment.payment.adapter.client.portone;
 
-import feign.Response;
-import feign.RetryableException;
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
 import jhkim593.orderpayment.payment.domain.dto.PortOneBillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.dto.PortOneBillingKeyPaymentResponseDto;
@@ -12,8 +10,8 @@ import jhkim593.orderpayment.payment.domain.error.PaymentException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 
-import java.io.InterruptedIOException;
 import java.net.SocketTimeoutException;
 
 @Component
@@ -24,7 +22,7 @@ public class PortOneApiManager {
 
     public PortOneBillingKeyPaymentResponseDto billingKeyPayment(Long paymentId, PortOneBillingKeyPaymentRequestDto request) {
         try {
-            return portOneApi.billingKeyPayment(paymentId, request);
+            return portOneApi.billingKeyPayment(paymentId, String.valueOf(paymentId), request);
         } catch (Exception e) {
             if (isTimeoutException(e)) {
                 log.warn("PortOne API timeout occurred. paymentId={}", paymentId);
@@ -47,11 +45,9 @@ public class PortOneApiManager {
     }
 
     private boolean isTimeoutException(Exception e) {
-        if (e instanceof RetryableException) {
+        if (e instanceof ResourceAccessException) {
             Throwable cause = e.getCause();
-            if (cause != null && cause instanceof SocketTimeoutException) {
-                return true;
-            }
+            return cause instanceof SocketTimeoutException;
         }
         return false;
     }
