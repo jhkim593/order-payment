@@ -4,9 +4,7 @@ import jhkim593.orderpayment.common.core.event.EventData;
 import jhkim593.orderpayment.common.core.event.EventType;
 import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelSucceededEventPayload;
 import jhkim593.orderpayment.order.adapter.event.EventHandler;
-import jhkim593.orderpayment.order.application.provided.OrderUpdater;
-import jhkim593.orderpayment.order.domain.error.ErrorCode;
-import jhkim593.orderpayment.order.domain.error.OrderException;
+import jhkim593.orderpayment.order.application.provided.OrderProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,12 +13,12 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class PaymentCancelSucceededEventHandler implements EventHandler<PaymentCancelSucceededEventPayload> {
-    private final OrderUpdater orderUpdater;
+    private final OrderProcessor orderProcessor;
 
     @Override
     public void handle(EventData<PaymentCancelSucceededEventPayload> eventData) {
         Long orderId = eventData.getPayload().getOrderId();
-        orderUpdater.cancelSucceededOrder(orderId);
+        orderProcessor.cancelSucceededOrder(orderId);
         log.info("Payment cancel succeeded handled. orderId={}", orderId);
     }
 

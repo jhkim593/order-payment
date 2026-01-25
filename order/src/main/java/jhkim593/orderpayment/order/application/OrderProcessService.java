@@ -3,7 +3,7 @@ package jhkim593.orderpayment.order.application;
 import jhkim593.orderpayment.common.client.exception.ClientException;
 import jhkim593.orderpayment.common.client.payment.PaymentClient;
 import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
-import jhkim593.orderpayment.order.application.provided.OrderUpdater;
+import jhkim593.orderpayment.order.application.provided.OrderProcessor;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderResponseDto;
@@ -13,20 +13,41 @@ import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class OrderUpdateService implements OrderUpdater {
+public class OrderProcessService implements OrderProcessor {
     private final OrderTransactionManager orderTransactionManager;
     private final PaymentClient paymentClient;
 
     @Override
     public OrderProcessResponseDto processOrder(OrderProcessRequestDto request) {
         Order order = orderTransactionManager.createOrder(request);
+        executePayment(request, order);
+        updateSucceeded(order.getOrderId());
+        return OrderProcessResponseDto.from(order);
+    }
 
+    @Override
+    public void cancelSucceededOrder(Long orderId) {
+        orderTransactionManager.cancelSucceeded(orderId);
+    }
+
+    @Override
+    public void cancelFailedOrder(Long orderId) {
+        orderTransactionManager.cancelFailed(orderId);
+    }
+
+    @Override
+    public CancelOrderResponseDto cancelOrder(Long orderId, CancelOrderRequestDto request) {
+        String reason = request.getReason() != null ? request.getReason() : "";
+        Order order = orderTransactionManager.canceling(orderId, reason);
+        return CancelOrderResponseDto.create(order);
+    }
+
+    private void executePayment(OrderProcessRequestDto request, Order order) {
         try {
             BillingKeyPaymentRequestDto paymentRequest = BillingKeyPaymentRequestDto.create(
                     request.getUserId(),
@@ -49,26 +70,6 @@ public class OrderUpdateService implements OrderUpdater {
             updateFailed(order.getOrderId());
             throw e;
         }
-
-        updateSucceeded(order.getOrderId());
-        return OrderProcessResponseDto.from(order);
-    }
-
-    @Override
-    public void cancelSucceededOrder(Long orderId) {
-        orderTransactionManager.cancelSucceeded(orderId);
-    }
-
-    @Override
-    public void cancelFailedOrder(Long orderId) {
-        orderTransactionManager.cancelFailed(orderId);
-    }
-
-    @Override
-    public CancelOrderResponseDto cancelOrder(Long orderId, CancelOrderRequestDto request) {
-        String reason = request.getReason() != null ? request.getReason() : "";
-        Order order = orderTransactionManager.canceling(orderId, reason);
-        return CancelOrderResponseDto.create(order);
     }
 
     private void updateSucceeded(Long orderId) {
