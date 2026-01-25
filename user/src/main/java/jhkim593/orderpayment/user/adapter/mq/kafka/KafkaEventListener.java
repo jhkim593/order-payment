@@ -11,6 +11,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -21,7 +22,8 @@ public class KafkaEventListener {
 
     @RetryableTopic(
             attempts = "3",
-            backOff = @BackOff(delay = 3000, multiplier = 2.0)
+            backOff = @BackOff(delay = 3000, multiplier = 2.0),
+            topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE
     )
     @KafkaListener(
             topics = Topic.ORDER,
