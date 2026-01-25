@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 public class OrderUpdateService implements OrderUpdater {
     private final OrderTransactionManager orderTransactionManager;
     private final PaymentClient paymentClient;
-    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
     public OrderProcessResponseDto processOrder(OrderProcessRequestDto request) {

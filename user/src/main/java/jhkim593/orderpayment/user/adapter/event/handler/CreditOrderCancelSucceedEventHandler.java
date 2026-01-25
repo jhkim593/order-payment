@@ -17,16 +17,10 @@ public class CreditOrderCancelSucceedEventHandler implements EventHandler<Credit
 
     @Override
     public void handle(EventData<CreditOrderCancelSucceedEventPayload> eventData) {
-        try {
-            CreditOrderCancelSucceedEventPayload payload = eventData.getPayload();
-            creditUpdater.cancelCredit(payload.getUserId(), payload.getOrderId(), payload.getCreditAmount());
-            log.info("Credit order cancel succeed handled. userId={}, orderId={}, amount={}",
-                    payload.getUserId(), payload.getOrderId(), payload.getCreditAmount());
-        } catch (Exception e) {
-            log.error("Failed to handle credit order cancel succeed event. orderId={}",
-                    eventData.getPayload().getOrderId(), e);
-            throw e;
-        }
+        CreditOrderCancelSucceedEventPayload payload = eventData.getPayload();
+        creditUpdater.cancelCredit(payload.getUserId(), payload.getOrderId(), payload.getCreditAmount());
+        log.info("Credit order cancel succeed handled. userId={}, orderId={}, amount={}",
+                payload.getUserId(), payload.getOrderId(), payload.getCreditAmount());
     }
 
     @Override

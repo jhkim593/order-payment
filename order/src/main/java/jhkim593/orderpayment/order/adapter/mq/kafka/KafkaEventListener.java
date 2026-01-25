@@ -5,6 +5,7 @@ import jhkim593.orderpayment.common.core.event.EventPayload;
 import jhkim593.orderpayment.common.core.event.Topic;
 import jhkim593.orderpayment.order.adapter.event.EventHandler;
 import jhkim593.orderpayment.order.adapter.event.EventHandlerFactory;
+import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.BackOff;
@@ -38,7 +39,11 @@ public class KafkaEventListener {
             log.info("Received payment event: {}", message);
 
             eventHandler.handle(eventData);
-        } catch (Exception e) {
+        } catch (OrderException e) {
+            log.error("Failed to process payment event: {}", message, e);
+            if (e.getErrorCode().isRetryable()) throw e;
+        }
+        catch (Exception e) {
             log.error("Failed to process payment event: {}", message, e);
             throw e;
         }

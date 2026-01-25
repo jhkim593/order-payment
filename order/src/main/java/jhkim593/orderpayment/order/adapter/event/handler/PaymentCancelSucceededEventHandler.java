@@ -19,13 +19,9 @@ public class PaymentCancelSucceededEventHandler implements EventHandler<PaymentC
 
     @Override
     public void handle(EventData<PaymentCancelSucceededEventPayload> eventData) {
-        try {
-            Long orderId = eventData.getPayload().getOrderId();
-            orderUpdater.cancelSucceededOrder(orderId);
-            log.info("Payment cancel succeeded handled. orderId={}", orderId);
-        } catch (OrderException e) {
-            return;
-        }
+        Long orderId = eventData.getPayload().getOrderId();
+        orderUpdater.cancelSucceededOrder(orderId);
+        log.info("Payment cancel succeeded handled. orderId={}", orderId);
     }
 
     @Override

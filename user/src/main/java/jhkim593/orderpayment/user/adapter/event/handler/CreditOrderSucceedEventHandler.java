@@ -18,15 +18,10 @@ public class CreditOrderSucceedEventHandler implements EventHandler<CreditOrderS
 
     @Override
     public void handle(EventData<CreditOrderSucceedEventPayload> eventData) {
-        try {
-            CreditOrderSucceedEventPayload payload = eventData.getPayload();
-            creditUpdater.addCredit(payload.getUserId(), payload.getOrderId(), payload.getCreditAmount());
-            log.info("Credit order succeed handled. userId={}, orderId={}, amount={}",
-                    payload.getUserId(), payload.getOrderId(), payload.getCreditAmount());
-        } catch (UserException e) {
-            log.error("Failed to handle credit order succeed event. orderId={}",
-                    eventData.getPayload().getOrderId(), e);
-        }
+        CreditOrderSucceedEventPayload payload = eventData.getPayload();
+        creditUpdater.addCredit(payload.getUserId(), payload.getOrderId(), payload.getCreditAmount());
+        log.info("Credit order succeed handled. userId={}, orderId={}, amount={}",
+                payload.getUserId(), payload.getOrderId(), payload.getCreditAmount());
     }
 
     @Override

@@ -24,16 +24,12 @@ public class OrderCancelEventHandler implements EventHandler<OrderCancelEventPay
 
         log.info("Order cancel event received. orderId={}, reason={}", orderId, reason);
 
-        try {
-            CancelPaymentRequestDto request = CancelPaymentRequestDto.builder()
-                    .reason(reason)
-                    .build();
+        CancelPaymentRequestDto request = CancelPaymentRequestDto.builder()
+                .reason(reason)
+                .build();
 
-            paymentProcessor.cancelPayment(orderId, request);
-            log.info("Payment cancelled successfully. orderId={}", orderId);
-        } catch (PaymentException e) {
-            return;
-        }
+        paymentProcessor.cancelPayment(orderId, request);
+        log.info("Payment cancelled successfully. orderId={}", orderId);
     }
 
     @Override

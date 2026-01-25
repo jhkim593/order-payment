@@ -1,6 +1,6 @@
 package jhkim593.orderpayment.payment.domain.error;
 
-public class PaymentException extends RuntimeException{
+public class PaymentException extends RuntimeException {
     private final ErrorCode errorCode;
 
     public PaymentException(ErrorCode errorCode) {
