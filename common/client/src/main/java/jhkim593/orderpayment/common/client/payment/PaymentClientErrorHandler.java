@@ -35,9 +35,10 @@ public class PaymentClientErrorHandler {
         try {
             errorResponse = objectMapper.readValue(response.getBody(), ErrorResponseDto.class);
             logger.error("Error response: code={}, message={}", errorResponse.getCode(), errorResponse.getMessage());
+            return new ClientException(response.getStatusCode().value(), errorResponse);
         } catch (Exception e) {
             logger.error("Failed to parse error response", e);
+            return new ClientException(response.getStatusCode().value(), "Failed to parse error response: " + e.getMessage());
         }
-        return new ClientException(response.getStatusCode().value(), errorResponse);
     }
 }

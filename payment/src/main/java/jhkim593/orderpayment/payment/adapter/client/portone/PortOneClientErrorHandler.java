@@ -34,11 +34,8 @@ public class PortOneClientErrorHandler {
             PortOneApiErrorResponseDto errorResponse = objectMapper.readValue(
                     response.getBody(), PortOneApiErrorResponseDto.class);
             return new PortOneApiException(response.getStatusCode().value(), errorResponse);
-        } catch (PortOneApiException e) {
-            throw e;
         } catch (Exception e) {
-            return new PortOneApiException(response.getStatusCode().value(),
-                    "Failed to parse error response: " + e.getMessage());
+            return new PortOneApiException(response.getStatusCode().value(), "Failed to parse error response: " + e.getMessage());
         }
     }
 }

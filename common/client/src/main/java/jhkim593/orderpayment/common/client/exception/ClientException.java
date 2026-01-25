@@ -14,6 +14,12 @@ public class ClientException extends RuntimeException {
         this.errorResponse = errorResponse;
     }
 
+    public ClientException(int statusCode, String message) {
+        super(String.format("[Client Error] status=%d, message=%s", statusCode, message));
+        this.status = statusCode;
+        this.errorResponse = null;
+    }
+
     public String getErrorCode() {
         return errorResponse != null ? errorResponse.getCode() : "UNKNOWN";
     }
