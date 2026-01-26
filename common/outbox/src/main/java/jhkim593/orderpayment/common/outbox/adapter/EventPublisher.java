@@ -23,7 +23,7 @@ public class EventPublisher {
             fixedDelay = 10,
             initialDelay = 5,
             timeUnit = TimeUnit.SECONDS,
-            scheduler = "messageRelayPublishPendingEventExecutor"
+            scheduler = "outboxPublishPendingEventExecutor"
     )
     public void publishPendingEvent() {
         List<OutboxEvent> outboxEvents = eventUpdater.findPendingEvents();

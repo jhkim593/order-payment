@@ -21,7 +21,7 @@ public class EventListener {
         eventUpdater.save(eventData);
     }
 
-    @Async("messageRelayPublishEventExecutor")
+    @Async("outboxPublishEventExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void afterCommitEvent(EventData eventData) throws Exception {
         try {
