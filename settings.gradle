@@ -3,7 +3,9 @@ rootProject.name = 'order-payment'
 include 'common'
 include 'common:outbox'
 include 'common:core'
-include 'common:client'
-include 'payment'
+
+include 'payment:payment-service'
+include 'payment:payment-api'
+
 include 'order'
 include 'user'

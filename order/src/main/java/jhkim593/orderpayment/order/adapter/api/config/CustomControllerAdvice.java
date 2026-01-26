@@ -1,7 +1,6 @@
 package jhkim593.orderpayment.order.adapter.api.config;
 
-import jhkim593.orderpayment.common.client.exception.ClientException;
-import jhkim593.orderpayment.common.core.api.ErrorResponseDto;
+import jhkim593.orderpayment.order.adapter.api.dto.ErrorResponseDto;
 import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -23,14 +22,6 @@ public class CustomControllerAdvice {
 
         return ResponseEntity.status(e.getErrorCode().getStatus())
                 .body(errorResponse);
-    }
-
-    @ExceptionHandler(ClientException.class)
-    public ResponseEntity<ErrorResponseDto> handleClientException(ClientException e) {
-        log.warn("Client Exception occurred: {}", e.getMessage(), e);
-
-        return ResponseEntity.status(e.getStatus())
-                .body(e.getErrorResponse());
     }
 
     @ExceptionHandler(Exception.class)

@@ -20,7 +20,7 @@ repositories {
 dependencies {
     implementation project(":common:core")
     implementation project(":common:outbox")
-    implementation project(":common:client")
+    implementation project(":payment:payment-api")
 
     implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

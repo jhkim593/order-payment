@@ -1,6 +1,6 @@
 package jhkim593.orderpayment.order.adapter.api;
 
-import jhkim593.orderpayment.order.application.provided.OrderUpdater;
+import jhkim593.orderpayment.order.application.provided.OrderProcessor;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderResponseDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class OrderController {
-    private final OrderUpdater orderUpdater;
+    private final OrderProcessor orderProcessor;
 
     @PostMapping("/api/v1/orders")
     public ResponseEntity<OrderProcessResponseDto> processOrder (@RequestBody OrderProcessRequestDto request) {
-        OrderProcessResponseDto response = orderUpdater.processOrder(request);
+        OrderProcessResponseDto response = orderProcessor.processOrder(request);
         return ResponseEntity.ok(response);
     }
 
@@ -27,7 +27,7 @@ public class OrderController {
     public ResponseEntity<CancelOrderResponseDto> cancelOrder(
             @PathVariable Long orderId,
             @RequestBody CancelOrderRequestDto request) {
-        CancelOrderResponseDto response = orderUpdater.cancelOrder(orderId, request);
+        CancelOrderResponseDto response = orderProcessor.cancelOrder(orderId, request);
         return ResponseEntity.ok(response);
     }
 }
