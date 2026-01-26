@@ -1,8 +1,8 @@
 package jhkim593.orderpayment.order.application;
 
-import jhkim593.orderpayment.common.client.exception.ClientException;
-import jhkim593.orderpayment.common.client.payment.PaymentClient;
-import jhkim593.orderpayment.common.core.api.payment.BillingKeyPaymentRequestDto;
+import jhkim593.orderpayment.payment.api.PaymentClient;
+import jhkim593.orderpayment.payment.api.dto.BillingKeyPaymentRequestDto;
+import jhkim593.orderpayment.payment.api.exception.PaymentApiException;
 import jhkim593.orderpayment.order.application.provided.OrderProcessor;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
@@ -59,8 +59,8 @@ public class OrderProcessService implements OrderProcessor {
             );
 
             paymentClient.billingKeyPayment(paymentRequest);
-        } catch (ClientException e) {
-            if ("PAYMENT_PROCESSING_DELAYED".equals(e.getErrorCode())) {
+        } catch (PaymentApiException e) {
+            if (e.isProcessingDelayed()) {
                 log.warn("Payment processing is delayed. Order remains PENDING. orderId={}", order.getOrderId());
                 throw new OrderException(ErrorCode.ORDER_PROCESSING_DELAYED);
             }

@@ -1,8 +1,8 @@
 package jhkim593.orderpayment.order.application;
 
-import jhkim593.orderpayment.common.client.exception.ClientException;
-import jhkim593.orderpayment.common.client.payment.PaymentClient;
-import jhkim593.orderpayment.common.core.api.payment.PaymentDetailResponseDto;
+import jhkim593.orderpayment.payment.api.PaymentClient;
+import jhkim593.orderpayment.payment.api.dto.PaymentDetailResponseDto;
+import jhkim593.orderpayment.payment.api.exception.PaymentApiException;
 import jhkim593.orderpayment.order.application.required.OrderRepository;
 import jhkim593.orderpayment.order.domain.Order;
 import lombok.RequiredArgsConstructor;
@@ -49,8 +49,8 @@ public class OrderRecoverService {
                 orderTransactionManager.failed(order.getOrderId());
                 log.info("Order recovered to FAILED. orderId={}", order.getOrderId());
             }
-        } catch (ClientException e) {
-            if ("PAYMENT_NOT_FOUND".equals(e.getErrorCode())) {
+        } catch (PaymentApiException e) {
+            if (e.isNotFound()) {
                 orderTransactionManager.failed(order.getOrderId());
                 log.warn("Payment not found for order. Set order to FAILED. orderId={}", order.getOrderId());
             }
