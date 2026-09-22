@@ -14,7 +14,7 @@ CREATE TABLE payment_method
 
 CREATE TABLE payment
 (
-    payment_id         BIGSERIAL PRIMARY KEY,
+    payment_id         BIGINT PRIMARY KEY,
     user_id            BIGINT NOT NULL,
     order_id           BIGINT NOT NULL UNIQUE,
     currency           VARCHAR(20),
@@ -30,12 +30,6 @@ CREATE TABLE payment
     created_at         TIMESTAMP    NOT NULL,
     updated_at         TIMESTAMP    NOT NULL
 );
-
-CREATE UNIQUE INDEX idx_payment_order_status
-    ON payment (order_id)
-    WHERE status IN ('PAYMENT_PENDING', 'PAYMENT_SUCCESS');
-
-
 
 CREATE TABLE payment_history
 (

@@ -2,7 +2,6 @@ package jhkim593.orderpayment.payment.api;
 
 import jhkim593.orderpayment.payment.api.dto.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.api.dto.BillingKeyPaymentResponseDto;
-import jhkim593.orderpayment.payment.api.dto.CancelPaymentResponseDto;
 import jhkim593.orderpayment.payment.api.dto.PaymentDetailResponseDto;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;

@@ -24,19 +24,6 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/api/v1/payment/{paymentId}/cancel")
-    public ResponseEntity<CancelPaymentResponseDto> cancelPayment(
-            @PathVariable Long paymentId,
-            @RequestBody CancelPaymentRequestDto request
-    ) {
-        Payment payment = paymentProcessor.cancelPayment(paymentId, request);
-        CancelPaymentResponseDto response = CancelPaymentResponseDto.builder()
-                .paymentId(payment.getPaymentId())
-                .cancelledAt(payment.getCancelledAt())
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
     @GetMapping("/api/v1/payment/order/{orderId}")
     public ResponseEntity<PaymentDetailResponseDto> getPaymentByOrderId(@PathVariable Long orderId) {
         Payment payment = paymentFinder.getPaymentByOrderId(orderId);
