@@ -12,6 +12,8 @@ import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 class PaymentTest {
 
+    private static final Long PAYMENT_ID = 1L;
+
     @Test
     void createPayment() {
         // given
@@ -19,7 +21,7 @@ class PaymentTest {
         BillingKeyPaymentRequestDto request = createRequest();
 
         // when
-        Payment payment = Payment.create(paymentMethod, request);
+        Payment payment = Payment.create(PAYMENT_ID, paymentMethod, request);
 
         // then
         // 상태 검증
@@ -59,7 +61,7 @@ class PaymentTest {
 
         // when & then
         PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.succeeded("pg_tx_123", LocalDateTime.now()));
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PAYMENT_NOT_PENDING);
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_PENDING);
     }
 
     @Test
@@ -81,7 +83,7 @@ class PaymentTest {
 
         // when & then
         PaymentException exception = catchThrowableOfType(PaymentException.class, payment::failed);
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PAYMENT_NOT_PENDING);
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_PENDING);
     }
 
     @Test
@@ -103,7 +105,7 @@ class PaymentTest {
 
         // when & then
         PaymentException exception = catchThrowableOfType(PaymentException.class, payment::canceling);
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PAYMENT_NOT_SUCCEEDED);
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_SUCCEEDED);
     }
 
     @Test
@@ -129,7 +131,7 @@ class PaymentTest {
 
         // when & then
         PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.cancelSucceeded("pg_cancel_123", LocalDateTime.now()));
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PAYMENT_NOT_CANCELING);
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_CANCELING);
     }
 
     @Test
@@ -151,21 +153,123 @@ class PaymentTest {
 
         // when & then
         PaymentException exception = catchThrowableOfType(PaymentException.class, payment::cancelFailed);
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PAYMENT_NOT_CANCELING);
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_CANCELING);
     }
 
     @Test
     void billingKey_with_null_paymentMethod() {
         // given
-        Payment payment = Payment.create(null, createRequest());
+        Payment payment = Payment.create(PAYMENT_ID, null, createRequest());
 
         // when & then
         PaymentException exception = catchThrowableOfType(PaymentException.class, payment::billingKey);
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PAYMENT_METHOD_NOT_FOUND);
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_METHOD_NOT_FOUND);
+    }
+
+    @Test
+    void 시도할때마다_시도횟수가_1씩_증가한다() {
+        // given
+        Payment payment = createPendingPayment();
+
+        // when
+        payment.addAttempt();
+        payment.addAttempt();
+
+        // then
+        assertThat(payment.getAttemptCount()).isEqualTo(2);
+    }
+
+    @Test
+    void 시도횟수가_최대치_미만이면_아직_소진되지_않는다() {
+        // given
+        Payment payment = createPendingPayment();
+
+        // when
+        addAttempts(payment, Payment.MAX_ATTEMPT_COUNT - 1);
+
+        // then
+        assertThat(payment.isAttemptExhausted()).isFalse();
+    }
+
+    @Test
+    void 시도횟수가_최대치에_도달하면_소진된다() {
+        // given
+        Payment payment = createPendingPayment();
+
+        // when
+        addAttempts(payment, Payment.MAX_ATTEMPT_COUNT);
+
+        // then
+        assertThat(payment.isAttemptExhausted()).isTrue();
+    }
+
+    @Test
+    void 취소를_시작하면_결제에서_쓴_시도횟수가_초기화된다() {
+        // given
+        Payment payment = createPendingPayment();
+        addAttempts(payment, 2);
+        payment.succeeded("pg_tx_123", LocalDateTime.now());
+
+        // when
+        payment.canceling();
+
+        // then
+        assertThat(payment.getAttemptCount()).isZero();
+        assertThat(payment.isAttemptExhausted()).isFalse();
+    }
+
+    @Test
+    void 결제_상태를_확정하지_못하면_UNKNOWN이_된다() {
+        // given
+        Payment payment = createPendingPayment();
+
+        // when
+        payment.unknown();
+
+        // then
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.UNKNOWN);
+    }
+
+    @Test
+    void unknown_pending아닐때_예외() {
+        // given
+        Payment payment = createSucceededPayment();
+
+        // when & then
+        PaymentException exception = catchThrowableOfType(PaymentException.class, payment::unknown);
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_PENDING);
+    }
+
+    @Test
+    void 취소_상태를_확정하지_못하면_CANCEL_UNKNOWN이_된다() {
+        // given
+        Payment payment = createCancelingPayment();
+
+        // when
+        payment.cancelUnknown();
+
+        // then
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCEL_UNKNOWN);
+    }
+
+    @Test
+    void cancelUnknown_canceling아닐때_예외() {
+        // given
+        Payment payment = createPendingPayment();
+
+        // when & then
+        PaymentException exception = catchThrowableOfType(PaymentException.class, payment::cancelUnknown);
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_CANCELING);
+    }
+
+    private void addAttempts(Payment payment, int times) {
+        for (int i = 0; i < times; i++) {
+            payment.addAttempt();
+        }
     }
 
     private Payment createPendingPayment() {
-        return Payment.create(createPaymentMethod(), createRequest());
+        return Payment.create(PAYMENT_ID, createPaymentMethod(), createRequest());
     }
 
     private Payment createSucceededPayment() {
@@ -182,7 +286,7 @@ class PaymentTest {
 
     private PaymentMethod createPaymentMethod() {
         return PaymentMethod.builder()
-                .id(1L)
+                .paymentMethodId(1L)
                 .userId(1L)
                 .billingKey("billingKey")
                 .pgProvider(PgProvider.PAYPAL)

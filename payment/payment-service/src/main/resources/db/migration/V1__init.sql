@@ -27,6 +27,7 @@ CREATE TABLE payment
     paid_at            TIMESTAMP,
     cancelled_at       TIMESTAMP,
     status_updated_at  TIMESTAMP    NOT NULL,
+    attempt_count      INTEGER      NOT NULL DEFAULT 0,
     created_at         TIMESTAMP    NOT NULL,
     updated_at         TIMESTAMP    NOT NULL
 );

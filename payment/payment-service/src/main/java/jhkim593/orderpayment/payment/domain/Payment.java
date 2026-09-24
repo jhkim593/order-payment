@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Payment {
 
+    public static final int MAX_ATTEMPT_COUNT = 3;
+
     @Id
     private Long paymentId;
 
@@ -51,6 +53,10 @@ public class Payment {
 
     @Column(nullable = false)
     private LocalDateTime statusUpdatedAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer attemptCount = 0;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
@@ -117,11 +123,36 @@ public class Payment {
         return paymentMethod.getBillingKey();
     }
 
+    public void unknown() {
+        if (!this.status.equals(PaymentStatus.PENDING)) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_PENDING);
+        }
+        this.status = PaymentStatus.UNKNOWN;
+        this.statusUpdatedAt = LocalDateTime.now();
+    }
+
+    public void cancelUnknown() {
+        if (!this.status.equals(PaymentStatus.CANCELING)) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_CANCELING);
+        }
+        this.status = PaymentStatus.CANCEL_UNKNOWN;
+        this.statusUpdatedAt = LocalDateTime.now();
+    }
+
+    public void addAttempt() {
+        this.attemptCount++;
+    }
+
+    public boolean isAttemptExhausted() {
+        return this.attemptCount >= MAX_ATTEMPT_COUNT;
+    }
+
     public void canceling(){
         if(!this.status.equals(PaymentStatus.SUCCEEDED)){
             throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_SUCCEEDED);
         }
         this.status = PaymentStatus.CANCELING;
         this.statusUpdatedAt = LocalDateTime.now();
+        this.attemptCount = 0;
     }
 }

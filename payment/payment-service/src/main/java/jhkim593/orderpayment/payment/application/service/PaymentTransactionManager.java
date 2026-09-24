@@ -47,6 +47,24 @@ public class PaymentTransactionManager {
     }
 
     @Transactional
+    public Payment addAttempt(Payment payment) {
+        payment.addAttempt();
+        return paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public Payment unknown(Payment payment) {
+        payment.unknown();
+        return paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public Payment cancelUnknown(Payment payment) {
+        payment.cancelUnknown();
+        return paymentRepository.save(payment);
+    }
+
+    @Transactional
     public Payment canceling(Long orderId) {
         Payment payment = paymentRepository.findByOrderId(orderId);
         payment.canceling();
