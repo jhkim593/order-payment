@@ -1,6 +1,5 @@
 package jhkim593.orderpayment.payment.adapter.database;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jhkim593.orderpayment.payment.adapter.database.jpa.PaymentJpaRepository;
 import jhkim593.orderpayment.payment.application.required.PaymentRepository;
@@ -9,6 +8,7 @@ import jhkim593.orderpayment.payment.domain.PaymentStatus;
 import jhkim593.orderpayment.payment.domain.QPayment;
 import jhkim593.orderpayment.payment.api.error.PaymentErrorCode;
 import jhkim593.orderpayment.payment.domain.error.PaymentException;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -20,6 +20,7 @@ import java.util.List;
 public class PaymentDBRepository implements PaymentRepository {
     private final PaymentJpaRepository paymentJpaRepository;
     private final JPAQueryFactory jpaQueryFactory;
+    private final EntityManager entityManager;
 
     @Override
     public Payment save(Payment payment) {
@@ -27,36 +28,28 @@ public class PaymentDBRepository implements PaymentRepository {
     }
 
     @Override
-    public List<Payment> findPendingPayments(int seconds) {
-        QPayment payment = QPayment.payment;
-
-        return jpaQueryFactory
-                .select(payment)
-                .from(payment)
-                .join(payment.paymentMethod).fetchJoin()
-                .where(
-                        statusEq(payment, PaymentStatus.PENDING),
-                        statusUpdatedAtBefore(payment, seconds)
-                )
-                .orderBy(payment.paymentId.asc())
-                .limit(100)
-                .fetch();
-    }
-
-    public List<Payment> findCancelingPayment(int seconds) {
-        QPayment payment = QPayment.payment;
-
-        return jpaQueryFactory
-                .select(payment)
-                .from(payment)
-                .join(payment.paymentMethod).fetchJoin()
-                .where(
-                        statusEq(payment, PaymentStatus.CANCELING),
-                        statusUpdatedAtBefore(payment, seconds)
-                )
-                .orderBy(payment.paymentId.asc())
-                .limit(100)
-                .fetch();
+    public List<Payment> updateCheck(PaymentStatus status, int minCheckCount, int maxCheckCount,
+                                     int intervalSeconds, LocalDateTime checkedAt, int limit) {
+        return entityManager.createNativeQuery("""
+                        UPDATE payment
+                           SET check_count = check_count + 1, checked_at = :checkedAt
+                         WHERE payment_id IN (
+                               SELECT payment_id FROM payment
+                                WHERE status = :status
+                                  AND check_count BETWEEN :minCheckCount AND :maxCheckCount
+                                  AND checked_at < :checkedBefore
+                                ORDER BY payment_id
+                                LIMIT :limit
+                                FOR UPDATE SKIP LOCKED)
+                        RETURNING *
+                        """, Payment.class)
+                .setParameter("checkedAt", checkedAt)
+                .setParameter("status", status.name())
+                .setParameter("minCheckCount", minCheckCount)
+                .setParameter("maxCheckCount", maxCheckCount)
+                .setParameter("checkedBefore", checkedAt.minusSeconds(intervalSeconds))
+                .setParameter("limit", limit)
+                .getResultList();
     }
 
     @Override
@@ -91,14 +84,6 @@ public class PaymentDBRepository implements PaymentRepository {
         }
 
         return result;
-    }
-
-    private BooleanExpression statusEq(QPayment payment, PaymentStatus status) {
-        return status != null ? payment.status.eq(status) : null;
-    }
-
-    private BooleanExpression statusUpdatedAtBefore(QPayment payment, int seconds) {
-        return payment.statusUpdatedAt.lt(LocalDateTime.now().minusSeconds(seconds));
     }
 
     @Override

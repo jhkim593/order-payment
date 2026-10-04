@@ -142,13 +142,30 @@
 
 ### 결정
 
-Redis·ShedLock 같은 분산 락을 도입하지 않는다. 후보를 조회한 뒤 행마다 조건부 UPDATE를 날리고, 변경 행 수가 1인 인스턴스만 처리한다.
+Redis·ShedLock 같은 분산 락을 도입하지 않는다. `UPDATE ... RETURNING` 한 번으로 확인 대상을 점유하고, 점유에 성공한 행만 돌려받아 처리한다.
 
 ```sql
 UPDATE payment
-   SET check_count = check_count + 1, checked_at = :now
- WHERE payment_id = :id AND status = :status AND <확인 시각 도래>
+   SET check_count = check_count + 1, checked_at = :checkedAt
+ WHERE payment_id IN (
+       SELECT payment_id FROM payment
+        WHERE status = :status
+          AND check_count BETWEEN :minCheckCount AND :maxCheckCount
+          AND checked_at < :checkedAt - :intervalSeconds
+        ORDER BY payment_id
+        LIMIT :limit
+        FOR UPDATE SKIP LOCKED)
+RETURNING *
 ```
+
+첫 확인과 재확인은 애플리케이션이 조건을 바꿔 두 번 호출한다.
+
+| 호출 | `check_count` 범위 | `intervalSeconds` |
+|---|---|---|
+| 첫 확인 | 0 ~ 0 | 80 |
+| 재확인 | 1 ~ `CHECK_LIMIT - 1` | 10 |
+
+80초·10초·한도 같은 정책은 애플리케이션이 파라미터로 넘기고, 어댑터는 받은 조건만 비교한다.
 
 ### 용어
 
@@ -168,8 +185,16 @@ UPDATE payment
 
 락 서버나 락 테이블 없이 행 하나로 끝나고, 점유한 인스턴스가 죽어도 대기 시간이 지나면 다른 인스턴스가 자동으로 회수한다. 락은 TTL 만료까지 물려 있다.
 
-`WHERE`의 `status`는 찾기 위한 조건이 아니라 **조회와 UPDATE 사이의 상태 변화를 막는 가드**다. 빠뜨리면 그사이 완료된 결제를 메모리의 낡은 상태로 덮어쓸 수 있다.
+조회와 점유가 한 쿼리라 그사이 상태가 바뀌는 틈이 없고, `FOR UPDATE SKIP LOCKED`로 인스턴스끼리 서로 다른 행을 나눠 가진다.
+
+기준 시각은 DB의 `now()`가 아니라 넘겨받은 `checkedAt`으로 계산한다. `checked_at`에 애플리케이션 시계로 찍은 값이 들어가므로 비교도 같은 시계로 해야 서버 간 시계 차이에 흔들리지 않는다.
+
+### 결과
+
+이 쿼리만 네이티브 SQL이다. 코드베이스의 나머지는 QueryDSL이고, Postgres 문법(`RETURNING`, `SKIP LOCKED`)에 묶인다.
 
 ### 대안
 
-`UPDATE ... RETURNING`으로 조회와 점유를 한 번에 처리하는 방식을 검토했고 Hibernate 7.2 + Postgres에서 동작하는 것도 확인했다. 쿼리 수가 줄고 `FOR UPDATE SKIP LOCKED`로 인스턴스 간 작업 분배까지 되지만, 코드베이스 전체가 QueryDSL인데 여기만 네이티브 SQL이 되는 비용이 더 크다고 판단했다. 폴링 백로그가 한 사이클에 다 돌지 못하는 것이 보이면 이 메서드만 교체한다.
+**후보를 조회한 뒤 행마다 조건부 UPDATE.** QueryDSL만으로 되지만 쿼리가 1 + N번 나가고, 어댑터가 조회와 UPDATE 양쪽에 같은 조건을 중복으로 들고 있어야 한다. `WHERE`의 `status`가 조회와 UPDATE 사이 상태 변화를 막는 가드 역할까지 해야 해서 빠뜨리기 쉽다.
+
+**QueryDSL 벌크 UPDATE 후 `checked_at = :checkedAt`으로 재조회.** 네이티브 SQL은 피하지만 JPQL UPDATE에 `LIMIT`이 없어 한 인스턴스가 대상 전부를 가져가고, 다른 인스턴스와 `checkedAt`이 우연히 같으면 남의 건까지 읽는다.

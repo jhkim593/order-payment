@@ -1,6 +1,5 @@
 package jhkim593.orderpayment.payment.application.service;
 
-import jhkim593.orderpayment.payment.application.required.PaymentRepository;
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentStatus;
@@ -11,7 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -19,17 +19,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class PaymentRecoverService {
     private final PaymentTransactionManager paymentTransactionManager;
-    private final PaymentRepository paymentRepository;
     private final PortOneApi portOneApi;
+    private final Clock clock;
 
     @Scheduled(
             fixedDelay = 10,
             timeUnit = TimeUnit.SECONDS
     )
     public void updatePendingPayments(){
-        List<Payment> pendingPayments = paymentRepository.findPendingPayments(80);
-
-        for (Payment payment : pendingPayments) {
+        for (Payment payment : paymentTransactionManager.claimPaymentsToCheck(PaymentStatus.PENDING, LocalDateTime.now(clock))) {
             try {
                 recoverPending(payment);
             } catch (Exception e) {
@@ -43,9 +41,7 @@ public class PaymentRecoverService {
             timeUnit = TimeUnit.SECONDS
     )
     public void updateCancelPendingPayments(){
-        List<Payment> pendingPayments = paymentRepository.findCancelingPayment(80);
-
-        for (Payment payment : pendingPayments) {
+        for (Payment payment : paymentTransactionManager.claimPaymentsToCheck(PaymentStatus.CANCELING, LocalDateTime.now(clock))) {
             try {
                 recoverCanceling(payment);
             } catch (Exception e) {
@@ -56,27 +52,25 @@ public class PaymentRecoverService {
 
 
     private void recoverPending(Payment payment) {
-        Payment attempted = paymentTransactionManager.addAttempt(payment);
         try {
-            checkPaymentStatus(attempted);
+            checkPaymentStatus(payment);
         } finally {
-            if (PaymentStatus.PENDING.equals(attempted.getStatus()) && attempted.isAttemptExhausted()) {
-                log.warn("Payment status unresolved after {} attempts. paymentId={}, orderId={}",
-                        Payment.MAX_ATTEMPT_COUNT, attempted.getPaymentId(), attempted.getOrderId());
-                paymentTransactionManager.unknown(attempted);
+            if (payment.isPendingLimit()) {
+                log.warn("Payment status unresolved after {} checks. paymentId={}, orderId={}",
+                        Payment.CHECK_LIMIT, payment.getPaymentId(), payment.getOrderId());
+                paymentTransactionManager.unknown(payment);
             }
         }
     }
 
     private void recoverCanceling(Payment payment) {
-        Payment attempted = paymentTransactionManager.addAttempt(payment);
         try {
-            checkCancelPaymentStatus(attempted);
+            checkCancelPaymentStatus(payment);
         } finally {
-            if (PaymentStatus.CANCELING.equals(attempted.getStatus()) && attempted.isAttemptExhausted()) {
-                log.warn("Cancel status unresolved after {} attempts. paymentId={}, orderId={}",
-                        Payment.MAX_ATTEMPT_COUNT, attempted.getPaymentId(), attempted.getOrderId());
-                paymentTransactionManager.cancelUnknown(attempted);
+            if (payment.isCancelingLimit()) {
+                log.warn("Cancel status unresolved after {} checks. paymentId={}, orderId={}",
+                        Payment.CHECK_LIMIT, payment.getPaymentId(), payment.getOrderId());
+                paymentTransactionManager.cancelUnknown(payment);
             }
         }
     }

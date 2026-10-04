@@ -18,7 +18,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Payment {
 
-    public static final int MAX_ATTEMPT_COUNT = 3;
+    public static final int CHECK_LIMIT = 4;
+    public static final int FIRST_CHECK_DELAY_SECONDS = 80;
+    public static final int CHECK_INTERVAL_SECONDS = 10;
 
     @Id
     private Long paymentId;
@@ -56,7 +58,10 @@ public class Payment {
 
     @Builder.Default
     @Column(nullable = false)
-    private Integer attemptCount = 0;
+    private Integer checkCount = 0;
+
+    @Column(nullable = false)
+    private LocalDateTime checkedAt;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
@@ -77,6 +82,7 @@ public class Payment {
                 .orderName(request.getOrderName())
                 .status(PaymentStatus.PENDING)
                 .statusUpdatedAt(LocalDateTime.now())
+                .checkedAt(LocalDateTime.now())
                 .build();
     }
 
@@ -139,12 +145,21 @@ public class Payment {
         this.statusUpdatedAt = LocalDateTime.now();
     }
 
-    public void addAttempt() {
-        this.attemptCount++;
+    public void check(LocalDateTime checkedAt) {
+        this.checkCount++;
+        this.checkedAt = checkedAt;
     }
 
-    public boolean isAttemptExhausted() {
-        return this.attemptCount >= MAX_ATTEMPT_COUNT;
+    public boolean isPendingLimit() {
+        return PaymentStatus.PENDING.equals(this.status) && isCheckLimit();
+    }
+
+    public boolean isCancelingLimit() {
+        return PaymentStatus.CANCELING.equals(this.status) && isCheckLimit();
+    }
+
+    private boolean isCheckLimit() {
+        return this.checkCount >= CHECK_LIMIT;
     }
 
     public void canceling(){
@@ -153,6 +168,7 @@ public class Payment {
         }
         this.status = PaymentStatus.CANCELING;
         this.statusUpdatedAt = LocalDateTime.now();
-        this.attemptCount = 0;
+        this.checkCount = 0;
+        this.checkedAt = LocalDateTime.now();
     }
 }

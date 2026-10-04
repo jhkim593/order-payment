@@ -7,6 +7,7 @@ import jhkim593.orderpayment.payment.application.provided.PaymentMethodFinder;
 import jhkim593.orderpayment.payment.application.required.PaymentRepository;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentMethod;
+import jhkim593.orderpayment.payment.domain.PaymentStatus;
 import jhkim593.orderpayment.payment.api.error.PaymentErrorCode;
 import jhkim593.orderpayment.payment.domain.error.PaymentException;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
@@ -15,10 +16,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class PaymentTransactionManager {
+    private static final int CHECK_BATCH_SIZE = 100;
+
     private final PaymentRepository paymentRepository;
     private final PaymentMethodFinder paymentMethodFinder;
     private final IdGenerator idGenerator;
@@ -47,9 +52,12 @@ public class PaymentTransactionManager {
     }
 
     @Transactional
-    public Payment addAttempt(Payment payment) {
-        payment.addAttempt();
-        return paymentRepository.save(payment);
+    public List<Payment> claimPaymentsToCheck(PaymentStatus status, LocalDateTime checkedAt) {
+        List<Payment> payments = new ArrayList<>(paymentRepository.updateCheck(
+                status, 0, 0, Payment.FIRST_CHECK_DELAY_SECONDS, checkedAt, CHECK_BATCH_SIZE));
+        payments.addAll(paymentRepository.updateCheck(
+                status, 1, Payment.CHECK_LIMIT - 1, Payment.CHECK_INTERVAL_SECONDS, checkedAt, CHECK_BATCH_SIZE));
+        return payments;
     }
 
     @Transactional

@@ -167,55 +167,57 @@ class PaymentTest {
     }
 
     @Test
-    void 시도할때마다_시도횟수가_1씩_증가한다() {
+    void 확인할때마다_확인횟수가_1씩_증가한다() {
         // given
         Payment payment = createPendingPayment();
 
         // when
-        payment.addAttempt();
-        payment.addAttempt();
+        LocalDateTime checkedAt = LocalDateTime.now();
+        payment.check(checkedAt.minusSeconds(10));
+        payment.check(checkedAt);
 
         // then
-        assertThat(payment.getAttemptCount()).isEqualTo(2);
+        assertThat(payment.getCheckCount()).isEqualTo(2);
+        assertThat(payment.getCheckedAt()).isEqualTo(checkedAt);
     }
 
     @Test
-    void 시도횟수가_최대치_미만이면_아직_소진되지_않는다() {
+    void 확인횟수가_최대치_미만이면_아직_소진되지_않는다() {
         // given
         Payment payment = createPendingPayment();
 
         // when
-        addAttempts(payment, Payment.MAX_ATTEMPT_COUNT - 1);
+        checks(payment, Payment.CHECK_LIMIT - 1);
 
         // then
-        assertThat(payment.isAttemptExhausted()).isFalse();
+        assertThat(payment.isPendingLimit()).isFalse();
     }
 
     @Test
-    void 시도횟수가_최대치에_도달하면_소진된다() {
+    void 확인횟수가_최대치에_도달하면_소진된다() {
         // given
         Payment payment = createPendingPayment();
 
         // when
-        addAttempts(payment, Payment.MAX_ATTEMPT_COUNT);
+        checks(payment, Payment.CHECK_LIMIT);
 
         // then
-        assertThat(payment.isAttemptExhausted()).isTrue();
+        assertThat(payment.isPendingLimit()).isTrue();
     }
 
     @Test
-    void 취소를_시작하면_결제에서_쓴_시도횟수가_초기화된다() {
+    void 취소를_시작하면_결제에서_쓴_확인횟수가_초기화된다() {
         // given
         Payment payment = createPendingPayment();
-        addAttempts(payment, 2);
+        checks(payment, 2);
         payment.succeeded("pg_tx_123", LocalDateTime.now());
 
         // when
         payment.canceling();
 
         // then
-        assertThat(payment.getAttemptCount()).isZero();
-        assertThat(payment.isAttemptExhausted()).isFalse();
+        assertThat(payment.getCheckCount()).isZero();
+        assertThat(payment.isCancelingLimit()).isFalse();
     }
 
     @Test
@@ -262,9 +264,9 @@ class PaymentTest {
         assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_CANCELING);
     }
 
-    private void addAttempts(Payment payment, int times) {
+    private void checks(Payment payment, int times) {
         for (int i = 0; i < times; i++) {
-            payment.addAttempt();
+            payment.check(LocalDateTime.now());
         }
     }
 
