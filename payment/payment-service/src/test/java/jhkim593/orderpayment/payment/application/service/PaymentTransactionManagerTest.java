@@ -69,15 +69,15 @@ class PaymentTransactionManagerTest {
         LocalDateTime checkedAt = payment.getCheckedAt().plusSeconds(81);
 
         // when
-        paymentTransactionManager.claimPaymentsToCheck(PaymentStatus.PENDING, checkedAt);
+        paymentTransactionManager.claimPaymentsCheck(PaymentStatus.PENDING, checkedAt);
 
         // then
-        assertThat(paymentTransactionManager.claimPaymentsToCheck(PaymentStatus.PENDING, checkedAt)).isEmpty();
+        assertThat(paymentTransactionManager.claimPaymentsCheck(PaymentStatus.PENDING, checkedAt)).isEmpty();
         assertThat(payment.getCheckCount()).isEqualTo(1);
     }
 
     private List<Payment> claimAfter(LocalDateTime from, long seconds) {
-        return paymentTransactionManager.claimPaymentsToCheck(PaymentStatus.PENDING, from.plusSeconds(seconds));
+        return paymentTransactionManager.claimPaymentsCheck(PaymentStatus.PENDING, from.plusSeconds(seconds));
     }
 
     private Payment savePendingPayment() {

@@ -4,11 +4,19 @@
 
 단계마다 세션을 나눠 진행한다. 1~4는 각각 독립적으로 배포 가능하고, 5는 세 모듈이 함께 나가야 한다.
 
+## 다음 할 일
+
+1. **1번 마무리** — Flyway 활성화 → Testcontainers 리포지토리 테스트 → 열린 문제 2건 판단
+2. **2번** 예외 분류 단순화 + 취소 멱등키
+3. **3번** UNKNOWN 수동 확정 경로 — 관리자 입구를 다시 열지 먼저 결정
+4. **4번** 크레딧 처리 방향 결정 (5번 범위가 여기에 달려 있음)
+5. **5번** 부분 취소 — 착수 전 5-0 실측 필수
+
 ---
 
 ## 1. check 어휘 전환 + 조회 조건 통합
 
-**상태:** 코드 적용 완료, Postgres 기반 검증 남음
+**상태:** 코드 적용·커밋 완료 (`62bf72c`). Postgres 기반 검증과 열린 문제 남음
 
 - [x] `V2` 마이그레이션 — `attempt_count` → `check_count` 리네임, `checked_at` 추가, 인덱스 `(status, checked_at)`
 - [x] `Payment` — `CHECK_LIMIT = 4`, `FIRST_CHECK_DELAY_SECONDS = 80`, `CHECK_INTERVAL_SECONDS = 10`, `checkCount` 기본값 `0`, `checkedAt`, `isCheckLimit()`
@@ -17,7 +25,8 @@
 - [x] `PaymentRepository` / `PaymentDBRepository` — `updateCheck` 하나로 통합 (`UPDATE ... RETURNING` + `SKIP LOCKED`, ADR 0001). 정책 값은 파라미터로 받음
 - [x] `PaymentTransactionManager.claimPaymentsToCheck` — 첫 확인(0회·80초)과 재확인(1~3회·10초)을 한 트랜잭션에서 선점
 - [x] `PaymentRecoverService` — 선점한 결제만 확인
-- [x] 테스트 갱신 (`PaymentTest`, `PaymentRecoverServiceTest`, `PaymentTransactionManagerTest`)
+- [x] 테스트 갱신 (`PaymentTest`, `PaymentRecoverServiceTest`, `PaymentTransactionManagerTest`) — Fake 기반, `Clock` 주입
+- [x] 앱 실행으로 네이티브 쿼리 엔티티 매핑 수동 확인
 
 **선점 조건** — 애플리케이션이 두 번 호출
 ```
@@ -26,9 +35,14 @@
 ```
 
 **남은 검증** — H2는 `RETURNING`/`SKIP LOCKED` 미지원이라 Postgres 필요
-- [ ] 선행: `spring-boot-starter-flyway` 추가 (Spring Boot 4에서 자동 설정이 분리돼 현재 Flyway 미실행)
-- [ ] 리포지토리 테스트(Testcontainers) — 횟수 범위·시간 조건, 같은 결제 중복 선점 안 됨, 선점 후 10초 지나면 다시 선점, `limit`
+- [ ] 선행: `spring-boot-starter-flyway` 추가 (Spring Boot 4에서 자동 설정이 분리돼 현재 Flyway 미실행). **켜기 전에 기존 `payment-db`에 스키마가 어떻게 올라가 있는지 확인** — 이력 테이블 없이 `baseline-on-migrate`가 돌면 V1.1·V2가 이미 있는 테이블에 다시 적용될 수 있음
+- [ ] 리포지토리 테스트(Testcontainers, 2.0.x) — 횟수 범위·시간 조건, 같은 결제 중복 선점 안 됨, 선점 후 10초 지나면 다시 선점, `limit`. `FakePaymentRepository`와 같은 결과인지가 핵심
 - [ ] (통합) 두 번째 선점 쿼리가 실패하면 첫 번째 선점도 롤백 — 확인하지 않은 채 횟수만 소진되는 것을 막기 위해
+- [ ] 인스턴스 2개 실행 확인 (아래 완료 조건)
+
+**열린 문제** — 고칠지 판단 필요
+- [x] 4번째 확인 뒤 `UNKNOWN` 전환이 예외로 실패하면 `PENDING`·4회로 남아 다시는 선점되지 않음 → 별도 스케줄러 `updateCheckLimitedPayments`가 전환 (ADR 0006)
+- [ ] V2의 `checked_at`이 기본값 없는 `NOT NULL` — `payment`에 행이 있는 DB에서는 마이그레이션 실패
 
 **완료 조건** — 인스턴스 2개에서 같은 결제에 대한 결제사 호출이 사이클당 1회
 

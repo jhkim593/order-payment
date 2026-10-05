@@ -53,6 +53,22 @@ public class PaymentDBRepository implements PaymentRepository {
     }
 
     @Override
+    public List<Payment> findPayments(PaymentStatus status, int minCheckCount, LocalDateTime checkedBefore, int limit) {
+        QPayment payment = QPayment.payment;
+
+        return jpaQueryFactory
+                .selectFrom(payment)
+                .where(
+                        payment.status.eq(status),
+                        payment.checkCount.goe(minCheckCount),
+                        payment.checkedAt.lt(checkedBefore)
+                )
+                .orderBy(payment.paymentId.asc())
+                .limit(limit)
+                .fetch();
+    }
+
+    @Override
     public Payment find(Long id) {
         QPayment payment = QPayment.payment;
 

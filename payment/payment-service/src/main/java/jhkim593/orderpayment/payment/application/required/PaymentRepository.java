@@ -10,6 +10,7 @@ public interface PaymentRepository {
     Payment save(Payment payment);
     List<Payment> updateCheck(PaymentStatus status, int minCheckCount, int maxCheckCount,
                               int intervalSeconds, LocalDateTime checkedAt, int limit);
+    List<Payment> findPayments(PaymentStatus status, int minCheckCount, LocalDateTime checkedBefore, int limit);
     Payment find(Long id);
     Payment findByOrderId(Long orderId);
     boolean existsByOrderId(Long orderId);

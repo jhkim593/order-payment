@@ -52,12 +52,18 @@ public class PaymentTransactionManager {
     }
 
     @Transactional
-    public List<Payment> claimPaymentsToCheck(PaymentStatus status, LocalDateTime checkedAt) {
+    public List<Payment> claimPaymentsCheck(PaymentStatus status, LocalDateTime checkedAt) {
         List<Payment> payments = new ArrayList<>(paymentRepository.updateCheck(
                 status, 0, 0, Payment.FIRST_CHECK_DELAY_SECONDS, checkedAt, CHECK_BATCH_SIZE));
         payments.addAll(paymentRepository.updateCheck(
                 status, 1, Payment.CHECK_LIMIT - 1, Payment.CHECK_INTERVAL_SECONDS, checkedAt, CHECK_BATCH_SIZE));
         return payments;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Payment> findCheckLimitedPayments(PaymentStatus status, LocalDateTime now) {
+        return paymentRepository.findPayments(
+                status, Payment.CHECK_LIMIT, now.minusSeconds(Payment.CHECK_INTERVAL_SECONDS), CHECK_BATCH_SIZE);
     }
 
     @Transactional

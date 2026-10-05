@@ -35,6 +35,16 @@ public class FakePaymentRepository implements PaymentRepository {
     }
 
     @Override
+    public List<Payment> findPayments(PaymentStatus status, int minCheckCount, LocalDateTime checkedBefore, int limit) {
+        return store.values().stream()
+                .filter(payment -> payment.getStatus() == status)
+                .filter(payment -> payment.getCheckCount() >= minCheckCount)
+                .filter(payment -> payment.getCheckedAt().isBefore(checkedBefore))
+                .limit(limit)
+                .toList();
+    }
+
+    @Override
     public Payment find(Long id) {
         Payment payment = store.get(id);
         if (payment == null) {

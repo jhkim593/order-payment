@@ -64,7 +64,19 @@ class PaymentRecoverServiceTest {
     }
 
     @Test
-    void 결제_4회_확인후에도_확정하지_못하면_UNKNOWN으로_내린다() {
+    void 결제_4회_확인후에도_확정하지_못하면_다음_사이클에_UNKNOWN으로_내린다() {
+        // given
+        Payment payment = savePendingPayment();
+
+        // when
+        runPendingRecover(Payment.CHECK_LIMIT + 1);
+
+        // then
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.UNKNOWN);
+    }
+
+    @Test
+    void 마지막_확인_직후에는_진행_중일_수_있어_UNKNOWN으로_내리지_않는다() {
         // given
         Payment payment = savePendingPayment();
 
@@ -72,7 +84,25 @@ class PaymentRecoverServiceTest {
         runPendingRecover(Payment.CHECK_LIMIT);
 
         // then
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(payment.getCheckCount()).isEqualTo(Payment.CHECK_LIMIT);
+    }
+
+    @Test
+    void 확인을_다_쓰고_PENDING으로_남은_결제는_UNKNOWN으로_내린다() {
+        // given
+        Payment payment = savePendingPayment();
+        for (int i = 0; i < Payment.CHECK_LIMIT; i++) {
+            payment.check(LocalDateTime.now(clock));
+        }
+
+        // when
+        clock.advanceSeconds(Payment.CHECK_INTERVAL_SECONDS + 1);
+        paymentRecoverService.updateCheckLimitedPayments();
+
+        // then
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.UNKNOWN);
+        assertThat(portOneApi.getGetPaymentCount()).isZero();
     }
 
     @Test
@@ -90,7 +120,7 @@ class PaymentRecoverServiceTest {
     }
 
     @Test
-    void 취소_4회_확인후에도_확정하지_못하면_CANCEL_UNKNOWN으로_내린다() {
+    void 취소_4회_확인후에도_확정하지_못하면_다음_사이클에_CANCEL_UNKNOWN으로_내린다() {
         // given
         Payment payment = saveCancelingPayment();
 
@@ -144,6 +174,7 @@ class PaymentRecoverServiceTest {
         clock.advanceSeconds(Payment.FIRST_CHECK_DELAY_SECONDS + 1);
         for (int i = 0; i < times; i++) {
             paymentRecoverService.updatePendingPayments();
+            paymentRecoverService.updateCheckLimitedPayments();
             clock.advanceSeconds(Payment.CHECK_INTERVAL_SECONDS + 1);
         }
     }
@@ -152,6 +183,7 @@ class PaymentRecoverServiceTest {
         clock.advanceSeconds(Payment.FIRST_CHECK_DELAY_SECONDS + 1);
         for (int i = 0; i < times; i++) {
             paymentRecoverService.updateCancelPendingPayments();
+            paymentRecoverService.updateCheckLimitedPayments();
             clock.advanceSeconds(Payment.CHECK_INTERVAL_SECONDS + 1);
         }
     }

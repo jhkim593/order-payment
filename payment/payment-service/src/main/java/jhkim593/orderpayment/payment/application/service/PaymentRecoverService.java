@@ -27,9 +27,9 @@ public class PaymentRecoverService {
             timeUnit = TimeUnit.SECONDS
     )
     public void updatePendingPayments(){
-        for (Payment payment : paymentTransactionManager.claimPaymentsToCheck(PaymentStatus.PENDING, LocalDateTime.now(clock))) {
+        for (Payment payment : paymentTransactionManager.claimPaymentsCheck(PaymentStatus.PENDING, LocalDateTime.now(clock))) {
             try {
-                recoverPending(payment);
+                checkPaymentStatus(payment);
             } catch (Exception e) {
                 log.error("Failed to recover pending payment. paymentId={}", payment.getPaymentId(), e);
             }
@@ -41,36 +41,39 @@ public class PaymentRecoverService {
             timeUnit = TimeUnit.SECONDS
     )
     public void updateCancelPendingPayments(){
-        for (Payment payment : paymentTransactionManager.claimPaymentsToCheck(PaymentStatus.CANCELING, LocalDateTime.now(clock))) {
+        for (Payment payment : paymentTransactionManager.claimPaymentsCheck(PaymentStatus.CANCELING, LocalDateTime.now(clock))) {
             try {
-                recoverCanceling(payment);
+                checkCancelPaymentStatus(payment);
             } catch (Exception e) {
                 log.error("Failed to recover canceling payment. paymentId={}", payment.getPaymentId(), e);
             }
         }
     }
 
+    @Scheduled(
+            fixedDelay = 10,
+            timeUnit = TimeUnit.SECONDS
+    )
+    public void updateCheckLimitedPayments(){
+        LocalDateTime now = LocalDateTime.now(clock);
 
-    private void recoverPending(Payment payment) {
-        try {
-            checkPaymentStatus(payment);
-        } finally {
-            if (payment.isPendingLimit()) {
+        for (Payment payment : paymentTransactionManager.findCheckLimitedPayments(PaymentStatus.PENDING, now)) {
+            try {
                 log.warn("Payment status unresolved after {} checks. paymentId={}, orderId={}",
                         Payment.CHECK_LIMIT, payment.getPaymentId(), payment.getOrderId());
                 paymentTransactionManager.unknown(payment);
+            } catch (Exception e) {
+                log.error("Failed to mark payment unknown. paymentId={}", payment.getPaymentId(), e);
             }
         }
-    }
 
-    private void recoverCanceling(Payment payment) {
-        try {
-            checkCancelPaymentStatus(payment);
-        } finally {
-            if (payment.isCancelingLimit()) {
+        for (Payment payment : paymentTransactionManager.findCheckLimitedPayments(PaymentStatus.CANCELING, now)) {
+            try {
                 log.warn("Cancel status unresolved after {} checks. paymentId={}, orderId={}",
                         Payment.CHECK_LIMIT, payment.getPaymentId(), payment.getOrderId());
                 paymentTransactionManager.cancelUnknown(payment);
+            } catch (Exception e) {
+                log.error("Failed to mark cancel unknown. paymentId={}", payment.getPaymentId(), e);
             }
         }
     }

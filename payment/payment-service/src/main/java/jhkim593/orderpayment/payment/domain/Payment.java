@@ -150,18 +150,6 @@ public class Payment {
         this.checkedAt = checkedAt;
     }
 
-    public boolean isPendingLimit() {
-        return PaymentStatus.PENDING.equals(this.status) && isCheckLimit();
-    }
-
-    public boolean isCancelingLimit() {
-        return PaymentStatus.CANCELING.equals(this.status) && isCheckLimit();
-    }
-
-    private boolean isCheckLimit() {
-        return this.checkCount >= CHECK_LIMIT;
-    }
-
     public void canceling(){
         if(!this.status.equals(PaymentStatus.SUCCEEDED)){
             throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_SUCCEEDED);

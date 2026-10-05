@@ -182,30 +182,6 @@ class PaymentTest {
     }
 
     @Test
-    void 확인횟수가_최대치_미만이면_아직_소진되지_않는다() {
-        // given
-        Payment payment = createPendingPayment();
-
-        // when
-        checks(payment, Payment.CHECK_LIMIT - 1);
-
-        // then
-        assertThat(payment.isPendingLimit()).isFalse();
-    }
-
-    @Test
-    void 확인횟수가_최대치에_도달하면_소진된다() {
-        // given
-        Payment payment = createPendingPayment();
-
-        // when
-        checks(payment, Payment.CHECK_LIMIT);
-
-        // then
-        assertThat(payment.isPendingLimit()).isTrue();
-    }
-
-    @Test
     void 취소를_시작하면_결제에서_쓴_확인횟수가_초기화된다() {
         // given
         Payment payment = createPendingPayment();
@@ -217,7 +193,6 @@ class PaymentTest {
 
         // then
         assertThat(payment.getCheckCount()).isZero();
-        assertThat(payment.isCancelingLimit()).isFalse();
     }
 
     @Test
