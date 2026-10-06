@@ -6,17 +6,16 @@
 
 ## 다음 할 일
 
-1. **1번 마무리** — Flyway 활성화 → Testcontainers 리포지토리 테스트 → 열린 문제 2건 판단
-2. **2번** 예외 분류 단순화 + 취소 멱등키
-3. **3번** UNKNOWN 수동 확정 경로 — 관리자 입구를 다시 열지 먼저 결정
-4. **4번** 크레딧 처리 방향 결정 (5번 범위가 여기에 달려 있음)
-5. **5번** 부분 취소 — 착수 전 5-0 실측 필수
+1. **2번** 예외 분류 단순화 + 취소 멱등키
+2. **3번** UNKNOWN 수동 확정 경로 — 관리자 입구를 다시 열지 먼저 결정
+3. **4번** 크레딧 처리 방향 결정 (5번 범위가 여기에 달려 있음)
+4. **5번** 부분 취소 — 착수 전 5-0 실측 필수
 
 ---
 
 ## 1. check 어휘 전환 + 조회 조건 통합
 
-**상태:** 코드 적용·커밋 완료 (`62bf72c`). Postgres 기반 검증과 열린 문제 남음
+**상태:** 완료
 
 - [x] `V2` 마이그레이션 — `attempt_count` → `check_count` 리네임, `checked_at` 추가, 인덱스 `(status, checked_at)`
 - [x] `Payment` — `CHECK_LIMIT = 4`, `FIRST_CHECK_DELAY_SECONDS = 80`, `CHECK_INTERVAL_SECONDS = 10`, `checkCount` 기본값 `0`, `checkedAt`, `isCheckLimit()`
@@ -35,16 +34,14 @@
 ```
 
 **남은 검증** — H2는 `RETURNING`/`SKIP LOCKED` 미지원이라 Postgres 필요
-- [ ] 선행: `spring-boot-starter-flyway` 추가 (Spring Boot 4에서 자동 설정이 분리돼 현재 Flyway 미실행). **켜기 전에 기존 `payment-db`에 스키마가 어떻게 올라가 있는지 확인** — 이력 테이블 없이 `baseline-on-migrate`가 돌면 V1.1·V2가 이미 있는 테이블에 다시 적용될 수 있음
-- [ ] 리포지토리 테스트(Testcontainers, 2.0.x) — 횟수 범위·시간 조건, 같은 결제 중복 선점 안 됨, 선점 후 10초 지나면 다시 선점, `limit`. `FakePaymentRepository`와 같은 결과인지가 핵심
-- [ ] (통합) 두 번째 선점 쿼리가 실패하면 첫 번째 선점도 롤백 — 확인하지 않은 채 횟수만 소진되는 것을 막기 위해
-- [ ] 인스턴스 2개 실행 확인 (아래 완료 조건)
+- [x] 선행: `spring-boot-starter-flyway` 추가. 기존 개발 DB는 V1 파일과 스키마가 달라 볼륨을 새로 만들고 V1 → V1.1 → V2 적용 확인
+- [x] 리포지토리 테스트(Testcontainers, `PaymentDBRepositoryTest`) — 횟수 범위·시간 조건, 10초 안 재선점 안 됨, `limit`, 다른 서버가 잡은 결제 건너뜀(SKIP LOCKED)
+- [x] 통합 테스트(`PaymentTransactionManagerIntegrationTest`) — 재확인 선점이 실패하면 첫 확인 선점도 롤백되어 횟수가 소진되지 않음
 
 **열린 문제** — 고칠지 판단 필요
 - [x] 4번째 확인 뒤 `UNKNOWN` 전환이 예외로 실패하면 `PENDING`·4회로 남아 다시는 선점되지 않음 → 별도 스케줄러 `updateCheckLimitedPayments`가 전환 (ADR 0006)
-- [ ] V2의 `checked_at`이 기본값 없는 `NOT NULL` — `payment`에 행이 있는 DB에서는 마이그레이션 실패
 
-**완료 조건** — 인스턴스 2개에서 같은 결제에 대한 결제사 호출이 사이클당 1회
+**완료 조건** — 인스턴스 2개에서 같은 결제에 대한 결제사 호출이 사이클당 1회 → `PaymentDBRepositoryTest`의 SKIP LOCKED·10초 재선점 테스트로 충족
 
 ---
 
