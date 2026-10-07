@@ -25,8 +25,8 @@ public class PaymentApiException extends RuntimeException {
         return errorResponse != null ? errorResponse.getCode() : "UNKNOWN";
     }
 
-    public boolean isProcessingDelayed() {
-        return PaymentErrorCode.PAYMENT_PROCESSING_DELAYED.getCode().equals(getErrorCode());
+    public boolean isPgPaymentUnknown() {
+        return PaymentErrorCode.PG_PAYMENT_UNKNOWN.getCode().equals(getErrorCode());
     }
 
     public boolean isNotFound() {

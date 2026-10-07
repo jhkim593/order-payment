@@ -33,18 +33,9 @@ public class PaymentProcessService implements PaymentProcessor {
         try {
             response = portOneApiManager.billingKeyPayment(payment.getPaymentId(), clientRequest);
         } catch (PaymentException e) {
-            if (PaymentErrorCode.PAYMENT_PROCESSING_DELAYED.equals(e.getErrorCode())) {
-                log.warn("Payment processing delayed. Payment remains PENDING. paymentId={}", payment.getPaymentId());
-                throw e;
+            if (PaymentErrorCode.PG_PAYMENT_FAILED.equals(e.getErrorCode())) {
+                updateFailed(payment, (PortOneApiException) e.getCause());
             }
-            updateFailed(payment, new PortOneApiException(500, e.getMessage()));
-            throw e;
-        } catch (PortOneApiException e) {
-            updateFailed(payment, e);
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error during payment processing. paymentId={}", payment.getPaymentId(), e);
-            updateFailed(payment, new PortOneApiException(500, "Unexpected error: " + e.getMessage()));
             throw e;
         }
         payment = updateSucceeded(payment, response.getPayment().getPgTxId(), response.getPayment().getPaidAt());
@@ -62,19 +53,9 @@ public class PaymentProcessService implements PaymentProcessor {
         try {
             response = portOneApiManager.cancelPayment(payment.getPaymentId(), cancelRequest);
         } catch (PaymentException e) {
-            if (PaymentErrorCode.PAYMENT_PROCESSING_DELAYED.equals(e.getErrorCode())) {
-                log.warn("Payment cancel processing delayed. paymentId={}", payment.getPaymentId());
-                throw e;
+            if (PaymentErrorCode.PG_PAYMENT_FAILED.equals(e.getErrorCode())) {
+                updateCancelFailed(payment, (PortOneApiException) e.getCause());
             }
-            updateCancelFailed(payment, new PortOneApiException(500, e.getMessage()));
-            throw e;
-        } catch (PortOneApiException e) {
-            updateCancelFailed(payment, e);
-            throw e;
-        }
-        catch (Exception e) {
-            log.error("Unexpected error during payment processing. paymentId={}", payment.getPaymentId(), e);
-            updateCancelFailed(payment, new PortOneApiException(500, "Unexpected error: " + e.getMessage()));
             throw e;
         }
         payment = updateCancelSucceeded(payment, response.getCancellation().getPgCancellationId(), response.getCancellation().getCancelledAt());

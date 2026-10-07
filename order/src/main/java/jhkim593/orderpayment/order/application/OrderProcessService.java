@@ -60,7 +60,7 @@ public class OrderProcessService implements OrderProcessor {
 
             paymentClient.billingKeyPayment(paymentRequest);
         } catch (PaymentApiException e) {
-            if (e.isProcessingDelayed()) {
+            if (e.isPgPaymentUnknown()) {
                 log.warn("Payment processing is delayed. Order remains PENDING. orderId={}", order.getOrderId());
                 throw new OrderException(ErrorCode.ORDER_PROCESSING_DELAYED);
             }

@@ -47,12 +47,18 @@
 
 ## 2. 예외 분류 단순화 + 취소 멱등키
 
-- [ ] `PortOneApiManager` — `isTimeoutException()`을 "응답을 확인하지 못함" 판정으로 교체 (타임아웃·커넥션 리셋·5xx). 연결 실패와 4xx는 통과
-- [ ] `PaymentProcessService` — `cancelPayment` / `billingKeyPayment`의 `catch` 갈래 정리
-- [ ] `PortOneApi.cancelPayment` — `Idempotency-Key` 헤더 추가
-- [ ] 폴링 중 NOT_FOUND 분기 — 결제는 `FAILED` 확정, 취소는 한도 대기 없이 `UNKNOWN` + 운영 알림
+**상태:** 완료
 
-**완료 조건** — 결제사가 5xx를 주는 상황에서 `FAILED`가 아니라 미확정 상태로 남음
+- [x] `PortOneApiManager` — 4xx는 `PG_PAYMENT_FAILED`, 그 외 전부 `PG_PAYMENT_UNKNOWN` (ADR 0002)
+- [x] `PaymentProcessService` — `PG_PAYMENT_FAILED`일 때만 실패 확정, catch 하나로
+- [x] `PortOneApi.cancelPayment` — `Idempotency-Key: cancel-{paymentId}`
+- [x] 폴링 중 NOT_FOUND 분기 — 두지 않기로 함. 한도 소진 후 `UNKNOWN`
+- [x] HTTP 클라이언트 `HttpURLConnection` → JDK `HttpClient` (POST 재전송 방지)
+- [x] 결제 에러 응답이 코드 값(`P006`) 대신 enum 이름을 보내 주문의 `isPgPaymentUnknown()`/`isNotFound()`가 항상 false이던 버그 수정
+
+**완료 조건** — 결제사가 5xx를 주는 상황에서 `FAILED`가 아니라 미확정 상태로 남음 → `PaymentProcessServiceTest`로 충족
+
+**남은 것** — 상태 조회 타임아웃이 60초로 ADR 0006 전제(10초 미만)와 어긋남. 조회 클라이언트만 짧게 분리할지 결정 필요
 
 ---
 

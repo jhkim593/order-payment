@@ -20,6 +20,7 @@ public interface PortOneApi {
     @PostExchange("/{paymentId}/cancel")
     PortOneCancelPaymentResponseDto cancelPayment(
             @PathVariable Long paymentId,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestBody PortOneCancelPaymentRequestDto request);
 
     @GetExchange("/{paymentId}")

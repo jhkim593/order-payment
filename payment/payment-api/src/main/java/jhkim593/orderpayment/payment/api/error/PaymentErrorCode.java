@@ -11,7 +11,8 @@ public enum PaymentErrorCode {
     PAYMENT_NOT_PENDING("P003", 400,"payment not pending", false),
     PAYMENT_NOT_CANCELING("P004", 400,"payment not canceling", false),
     PAYMENT_ALREADY_EXISTS("P005", 400,"payment already exists for this order", false),
-    PAYMENT_PROCESSING_DELAYED("P006", 503,"payment processing is delayed, please check later", false);
+    PG_PAYMENT_UNKNOWN("P006", 503,"PG payment result is unknown, please check later", false),
+    PG_PAYMENT_FAILED("P007", 400,"PG payment failed", false);
 
     private final String code;
     private final int status;

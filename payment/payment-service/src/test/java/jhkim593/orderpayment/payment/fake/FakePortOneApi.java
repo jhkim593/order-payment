@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class FakePortOneApi implements PortOneApi {
 
     private String paymentStatus = "READY";
+    private RuntimeException requestFailure;
 
     private int billingKeyPaymentCount;
     private int cancelPaymentCount;
@@ -19,6 +20,10 @@ public class FakePortOneApi implements PortOneApi {
 
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public void setRequestFailure(RuntimeException requestFailure) {
+        this.requestFailure = requestFailure;
     }
 
     public int getBillingKeyPaymentCount() {
@@ -37,13 +42,30 @@ public class FakePortOneApi implements PortOneApi {
     public PortOneBillingKeyPaymentResponseDto billingKeyPayment(Long paymentId, String idempotencyKey,
                                                                  PortOneBillingKeyPaymentRequestDto request) {
         billingKeyPaymentCount++;
-        throw new UnsupportedOperationException();
+        if (requestFailure != null) {
+            throw requestFailure;
+        }
+        return PortOneBillingKeyPaymentResponseDto.builder()
+                .payment(PortOneBillingKeyPaymentResponseDto.PaymentInfo.builder()
+                        .pgTxId("pg_tx_123")
+                        .paidAt(LocalDateTime.now())
+                        .build())
+                .build();
     }
 
     @Override
-    public PortOneCancelPaymentResponseDto cancelPayment(Long paymentId, PortOneCancelPaymentRequestDto request) {
+    public PortOneCancelPaymentResponseDto cancelPayment(Long paymentId, String idempotencyKey,
+                                                         PortOneCancelPaymentRequestDto request) {
         cancelPaymentCount++;
-        throw new UnsupportedOperationException();
+        if (requestFailure != null) {
+            throw requestFailure;
+        }
+        return PortOneCancelPaymentResponseDto.builder()
+                .cancellation(PortOneCancelPaymentResponseDto.PaymentCancellation.builder()
+                        .pgCancellationId("pg_cancel_123")
+                        .cancelledAt(LocalDateTime.now())
+                        .build())
+                .build();
     }
 
     @Override

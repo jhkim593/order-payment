@@ -16,7 +16,7 @@ public class CustomControllerAdvice {
         log.warn("Custom Exception occurred: {}", e.getMessage(), e);
 
         ErrorResponseDto errorResponse = ErrorResponseDto.builder()
-                .code(e.getErrorCode().name())
+                .code(e.getErrorCode().getCode())
                 .message(e.getErrorCode().getMessage())
                 .build();
 

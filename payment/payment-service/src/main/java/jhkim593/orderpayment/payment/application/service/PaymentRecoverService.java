@@ -4,7 +4,6 @@ import jhkim593.orderpayment.payment.application.required.PortOneApi;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentStatus;
 import jhkim593.orderpayment.payment.domain.dto.PortOneGetPaymentResponseDto;
-import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -79,19 +78,13 @@ public class PaymentRecoverService {
     }
 
     private void checkPaymentStatus(Payment payment){
-        try {
-            PortOneGetPaymentResponseDto response = portOneApi.getPayment(payment.getPaymentId());
+        PortOneGetPaymentResponseDto response = portOneApi.getPayment(payment.getPaymentId());
 
-            String status = response.getStatus();
-            if ("PAID".equals(status)) {
-                paymentTransactionManager.succeeded(payment, response.getPgTxId(), response.getPaidAt());
-            } else if ("FAILED".equals(status)) {
-                paymentTransactionManager.failed(payment, null);
-            }
-        } catch (PortOneApiException e){
-            if (e.getErrorResponse() != null && "PAYMENT_NOT_FOUND".equals(e.getErrorResponse().getType())) {
-                paymentTransactionManager.failed(payment, e);
-            }
+        String status = response.getStatus();
+        if ("PAID".equals(status)) {
+            paymentTransactionManager.succeeded(payment, response.getPgTxId(), response.getPaidAt());
+        } else if ("FAILED".equals(status)) {
+            paymentTransactionManager.failed(payment, null);
         }
     }
 
