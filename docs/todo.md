@@ -7,9 +7,8 @@
 ## 다음 할 일
 
 1. **2번** 예외 분류 단순화 + 취소 멱등키
-2. **3번** UNKNOWN 수동 확정 경로 — 관리자 입구를 다시 열지 먼저 결정
-3. **4번** 크레딧 처리 방향 결정 (5번 범위가 여기에 달려 있음)
-4. **5번** 부분 취소 — 착수 전 5-0 실측 필수
+2. **5번** 부분 취소 — 착수 전 5-0 실측 필수
+3. **3번** UNKNOWN 수동 확정 경로 — 부분 취소 적용 후 진행. 관리자 입구를 다시 열지 먼저 결정
 
 ---
 
@@ -64,6 +63,8 @@
 
 ## 3. UNKNOWN 수동 확정 경로
 
+**선행:** 5번(부분 취소) 적용 후 진행. 5-2에서 취소 상태가 `PaymentStatus`의 `CANCEL_*`에서 `CancellationStatus`로 옮겨가므로, 먼저 만들면 취소 쪽 확정 경로를 다시 짜야 한다.
+
 - [ ] `UNKNOWN`에서 나가는 전이 (`confirm*` 접두사)
 - [ ] 확정 시 기존 성공/실패 이벤트 발행 — 새 이벤트 타입 만들지 않음
 - [ ] 관리자 입구 — `UNKNOWN` 목록 조회 + 확정. **커밋 `260867b`에서 결제 취소 REST 엔드포인트를 제거한 이력이 있어, 다시 여는 게 맞는지 먼저 확인**
@@ -75,12 +76,14 @@
 
 ## 4. 크레딧 제거 → 일반 상품
 
-**선행 결정 필요.** `order/docs/spec.md`는 이미 크레딧을 뺐지만 코드에는 남아 있다.
+**상태:** 완료
 
-- [ ] `CreditOrderSucceedEventPayload` / `CreditOrderCancelSucceedEventPayload` 처리 방향 결정
-- [ ] `user` 모듈 크레딧 로직 처리 방향 결정
-- [ ] `credit_product` 테이블과 `product_type` 처리
-- [ ] `order/docs/adr.md`에 결정 기록
+- [x] 크레딧 이벤트·페이로드 삭제, `user` 모듈 크레딧 로직·테이블 삭제 (Kafka 컨슈머 인프라는 유지)
+- [x] `Product` 단일 엔티티 + 재고(`stock`), `credit_product`·`product_type` 제거 (order `V2`, user `V2`)
+- [x] 재고: 주문 생성 시 차감, 결제 실패·취소 성공 시 복원 (ADR 0003), ID 순 잠금 + `refresh` (ADR 0004)
+- [x] 같은 상품 중복 주문 거절
+- [x] `OrderStockIntegrationTest` (Testcontainers)
+- [x] order에 `spring-boot-starter-flyway` 추가 — 이전엔 마이그레이션이 자동 실행되지 않았음
 
 **왜 5보다 먼저** — 부분 취소에서 크레딧을 부분 회수해야 하는데, 일반 상품으로 가면 그 경로 자체가 없어진다. 먼저 정리해야 5의 범위가 확정된다.
 
@@ -92,7 +95,12 @@
 
 ### 5-0. 선행 확인
 
-- [ ] **결제사 결제 조회 응답에 누적 취소 금액이 오는지 실측.** ADR 0004가 이 값에 기대고 있다. 테스트 결제로 부분 취소 후 `getPayment` 응답을 찍어본다
+- [x] **결제사 결제 조회 응답에 누적 취소 금액이 오는지** — PortOne V2 OpenAPI로 확인 (2026-10-07)
+  - `amount.cancelled` (총 취소금액, 필수) + `cancellations` 배열. ADR 0004 전제 성립
+  - 부분 취소 후 결제 상태는 `PARTIAL_CANCELLED` → 취소 확정은 상태가 아니라 `amount.cancelled` 증가로 판정
+  - 취소 응답 `cancellation.status`가 `REQUESTED`일 수 있음 → 성공 확정 금지, 미확정으로 폴링
+  - `CancelPaymentBody.currentCancellableAmount` — 직전 잔액이 일치할 때만 취소. 이중 환불 방어용으로 5-2에서 사용 검토
+- [ ] 5-2 구현 후 테스트 결제 한 번으로 `amount.cancelled`가 테스트 채널에서도 채워지는지 확인
 
 ### 5-1. `common:core` — 이벤트 계약
 
