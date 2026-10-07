@@ -1,0 +1,5 @@
+DROP TABLE credit_product;
+
+ALTER TABLE product DROP COLUMN product_type;
+ALTER TABLE product ADD COLUMN stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0);
+ALTER TABLE product ALTER COLUMN stock DROP DEFAULT;

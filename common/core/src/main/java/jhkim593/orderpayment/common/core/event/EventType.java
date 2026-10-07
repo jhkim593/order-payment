@@ -1,7 +1,5 @@
 package jhkim593.orderpayment.common.core.event;
 
-import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderCancelSucceedEventPayload;
-import jhkim593.orderpayment.common.core.event.order.payload.CreditOrderSucceedEventPayload;
 import jhkim593.orderpayment.common.core.event.order.payload.OrderCancelEventPayload;
 import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelFailedEventPayload;
 import jhkim593.orderpayment.common.core.event.payment.payload.PaymentCancelSucceededEventPayload;
@@ -19,9 +17,7 @@ public enum EventType {
     PAYMENT_FAIL(PaymentFailEventPayload.class, Topic.PAYMENT),
     PAYMENT_CANCEL_SUCCEEDED(PaymentCancelSucceededEventPayload.class, Topic.PAYMENT),
     PAYMENT_CANCEL_FAILED(PaymentCancelFailedEventPayload.class, Topic.PAYMENT),
-    ORDER_CANCEL(OrderCancelEventPayload.class, Topic.ORDER),
-    CREDIT_ORDER_SUCCEED(CreditOrderSucceedEventPayload.class, Topic.ORDER),
-    CREDIT_ORDER_CANCEL_SUCCEED(CreditOrderCancelSucceedEventPayload.class, Topic.ORDER);
+    ORDER_CANCEL(OrderCancelEventPayload.class, Topic.ORDER);
 
     private final Class<? extends EventPayload> payloadClass;
     private final String topic;

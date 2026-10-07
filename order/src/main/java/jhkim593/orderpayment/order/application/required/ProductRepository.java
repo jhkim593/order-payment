@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface ProductRepository {
     Product find(Long id);
-    List<Product> findByIds(List<Long> ids);
+    List<Product> findAllForUpdate(List<Long> ids);
 }

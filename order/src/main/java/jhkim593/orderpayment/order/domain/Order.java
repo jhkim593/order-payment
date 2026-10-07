@@ -58,6 +58,12 @@ public class Order {
     }
 
     public void addOrderProduct(OrderProduct orderProduct) {
+        Long productId = orderProduct.getProduct().getProductId();
+        boolean duplicated = orderProducts.stream()
+                .anyMatch(op -> op.getProduct().getProductId().equals(productId));
+        if (duplicated) {
+            throw new OrderException(ErrorCode.DUPLICATE_ORDER_PRODUCT);
+        }
         this.orderProducts.add(orderProduct);
     }
 
