@@ -30,9 +30,9 @@ public class PortOneApiManager {
         }
     }
 
-    public PortOneCancelPaymentResponseDto cancelPayment(Long paymentId, PortOneCancelPaymentRequestDto request) {
+    public PortOneCancelPaymentResponseDto cancelPayment(Long paymentId, Long cancellationId, PortOneCancelPaymentRequestDto request) {
         try {
-            return portOneApi.cancelPayment(paymentId, "cancel-" + paymentId, request);
+            return portOneApi.cancelPayment(paymentId, String.valueOf(cancellationId), request);
         } catch (Exception e) {
             if (e instanceof PortOneApiException apiException && apiException.getStatusCode() / 100 == 4) {
                 throw new PaymentException(PaymentErrorCode.PG_PAYMENT_FAILED, e);

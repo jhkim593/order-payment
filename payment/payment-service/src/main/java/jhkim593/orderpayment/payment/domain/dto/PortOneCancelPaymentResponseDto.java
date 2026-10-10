@@ -25,5 +25,13 @@ public class PortOneCancelPaymentResponseDto {
         private LocalDateTime requestedAt;
         private LocalDateTime cancelledAt;
         private String status;
+
+        public boolean isSucceeded() {
+            return "SUCCEEDED".equals(status);
+        }
+
+        public boolean isFailed() {
+            return "FAILED".equals(status);
+        }
     }
 }

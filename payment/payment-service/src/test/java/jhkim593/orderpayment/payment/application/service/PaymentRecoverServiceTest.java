@@ -5,7 +5,6 @@ import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentMethod;
 import jhkim593.orderpayment.payment.domain.PaymentStatus;
 import jhkim593.orderpayment.payment.domain.PgProvider;
-import jhkim593.orderpayment.payment.fake.FakeInternalEventPublisher;
 import jhkim593.orderpayment.payment.fake.FakePaymentRepository;
 import jhkim593.orderpayment.payment.fake.FakePortOneApi;
 import jhkim593.orderpayment.payment.fake.TestClock;
@@ -22,7 +21,6 @@ class PaymentRecoverServiceTest {
 
     private FakePaymentRepository paymentRepository;
     private FakePortOneApi portOneApi;
-    private FakeInternalEventPublisher eventPublisher;
     private TestClock clock;
     private PaymentRecoverService paymentRecoverService;
 
@@ -30,10 +28,9 @@ class PaymentRecoverServiceTest {
     void setUp() {
         paymentRepository = new FakePaymentRepository();
         portOneApi = new FakePortOneApi();
-        eventPublisher = new FakeInternalEventPublisher();
         clock = new TestClock();
         PaymentTransactionManager paymentTransactionManager =
-                new PaymentTransactionManager(paymentRepository, null, () -> 1L, eventPublisher);
+                new PaymentTransactionManager(paymentRepository, null, () -> 1L);
         paymentRecoverService = new PaymentRecoverService(paymentTransactionManager, portOneApi, clock);
     }
 
@@ -120,33 +117,6 @@ class PaymentRecoverServiceTest {
     }
 
     @Test
-    void 취소_4회_확인후에도_확정하지_못하면_다음_사이클에_CANCEL_UNKNOWN으로_내린다() {
-        // given
-        Payment payment = saveCancelingPayment();
-
-        // when
-        runCancelRecover(Payment.CHECK_LIMIT + 1);
-
-        // then
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCEL_UNKNOWN);
-        assertThat(portOneApi.getGetPaymentCount()).isEqualTo(Payment.CHECK_LIMIT);
-    }
-
-    @Test
-    void 취소가_4회_안에_확정되면_CANCEL_UNKNOWN으로_내리지_않는다() {
-        // given
-        Payment payment = saveCancelingPayment();
-        portOneApi.setPaymentStatus("CANCELLED");
-
-        // when
-        runCancelRecover(Payment.CHECK_LIMIT);
-
-        // then
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCEL_SUCCEEDED);
-        assertThat(eventPublisher.getCancelSucceeded()).containsExactly(payment);
-    }
-
-    @Test
     void 결제_확인은_상태만_조회하고_결제를_다시_요청하지_않는다() {
         // given
         savePendingPayment();
@@ -158,18 +128,6 @@ class PaymentRecoverServiceTest {
         assertThat(portOneApi.getBillingKeyPaymentCount()).isZero();
     }
 
-    @Test
-    void 취소_확인은_상태만_조회하고_취소를_다시_요청하지_않는다() {
-        // given
-        saveCancelingPayment();
-
-        // when
-        runCancelRecover(Payment.CHECK_LIMIT);
-
-        // then
-        assertThat(portOneApi.getCancelPaymentCount()).isZero();
-    }
-
     private void runPendingRecover(int times) {
         clock.advanceSeconds(Payment.FIRST_CHECK_DELAY_SECONDS + 1);
         for (int i = 0; i < times; i++) {
@@ -179,24 +137,8 @@ class PaymentRecoverServiceTest {
         }
     }
 
-    private void runCancelRecover(int times) {
-        clock.advanceSeconds(Payment.FIRST_CHECK_DELAY_SECONDS + 1);
-        for (int i = 0; i < times; i++) {
-            paymentRecoverService.updateCancelPendingPayments();
-            paymentRecoverService.updateCheckLimitedPayments();
-            clock.advanceSeconds(Payment.CHECK_INTERVAL_SECONDS + 1);
-        }
-    }
-
     private Payment savePendingPayment() {
         return paymentRepository.save(Payment.create(PAYMENT_ID, createPaymentMethod(), createRequest()));
-    }
-
-    private Payment saveCancelingPayment() {
-        Payment payment = Payment.create(PAYMENT_ID, createPaymentMethod(), createRequest());
-        payment.succeeded("pg_tx_123", LocalDateTime.now());
-        payment.canceling();
-        return paymentRepository.save(payment);
     }
 
     private PaymentMethod createPaymentMethod() {

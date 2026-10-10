@@ -11,8 +11,9 @@ import lombok.NoArgsConstructor;
 public class PaymentCancelFailedEventPayload implements EventPayload {
     private Long paymentId;
     private Long orderId;
+    private Long cancellationId;
 
-    public static PaymentCancelFailedEventPayload create(Long paymentId, Long orderId) {
-        return new PaymentCancelFailedEventPayload(paymentId, orderId);
+    public static PaymentCancelFailedEventPayload create(Long paymentId, Long orderId, Long cancellationId) {
+        return new PaymentCancelFailedEventPayload(paymentId, orderId, cancellationId);
     }
 }

@@ -65,4 +65,8 @@ public class FakePaymentRepository implements PaymentRepository {
     public boolean existsByOrderId(Long orderId) {
         return store.values().stream().anyMatch(payment -> payment.getOrderId().equals(orderId));
     }
+
+    List<Payment> findAll() {
+        return List.copyOf(store.values());
+    }
 }

@@ -10,12 +10,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderCancelEventPayload implements EventPayload {
     private Long orderId;
+    private Long cancellationId;
+    private Integer amount;
     private String reason;
 
     public static OrderCancelEventPayload create(
             Long orderId,
+            Long cancellationId,
+            Integer amount,
             String reason
     ) {
-        return new OrderCancelEventPayload(orderId, reason);
+        return new OrderCancelEventPayload(orderId, cancellationId, amount, reason);
     }
 }

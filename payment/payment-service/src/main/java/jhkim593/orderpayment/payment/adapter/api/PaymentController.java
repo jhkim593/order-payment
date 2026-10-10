@@ -44,7 +44,6 @@ public class PaymentController {
                 .amount(payment.getAmount())
                 .status(payment.getStatus().name())
                 .paidAt(payment.getPaidAt())
-                .cancelledAt(payment.getCancelledAt())
                 .build();
         return ResponseEntity.ok(response);
     }

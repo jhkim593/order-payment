@@ -22,21 +22,21 @@ public class SpringEventPublisher implements InternalEventPublisher {
     private final IdGenerator idGenerator;
 
     @Override
-    public void paymentCancelFailedEventPublish(Payment payment){
+    public void paymentCancelFailedEventPublish(Payment payment, Long cancellationId){
         applicationEventPublisher.publishEvent(
                 new PaymentCancelFailedEvent(
                         idGenerator.getId(),
-                        PaymentCancelFailedEventPayload.create(payment.getPaymentId(), payment.getOrderId())
+                        PaymentCancelFailedEventPayload.create(payment.getPaymentId(), payment.getOrderId(), cancellationId)
                 )
         );
     }
 
     @Override
-    public void paymentCancelSucceededEventPublish(Payment payment){
+    public void paymentCancelSucceededEventPublish(Payment payment, Long cancellationId){
         applicationEventPublisher.publishEvent(
                 new PaymentCancelSucceededEvent(
                         idGenerator.getId(),
-                        PaymentCancelSucceededEventPayload.create(payment.getPaymentId(), payment.getOrderId())
+                        PaymentCancelSucceededEventPayload.create(payment.getPaymentId(), payment.getOrderId(), cancellationId)
                 )
         );
     }

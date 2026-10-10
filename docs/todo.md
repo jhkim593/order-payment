@@ -104,17 +104,19 @@
 
 ### 5-1. `common:core` — 이벤트 계약
 
-- [ ] `OrderCancelEventPayload` — `cancellationId`, `amount` 추가
-- [ ] `PaymentCancelSucceededEventPayload` / `PaymentCancelFailedEventPayload` — `cancellationId` 추가
+- [x] `OrderCancelEventPayload` — `cancellationId`, `amount` 추가
+- [x] `PaymentCancelSucceededEventPayload` / `PaymentCancelFailedEventPayload` — `cancellationId` 추가
 
 ### 5-2. `payment`
 
-- [ ] `payment_cancellation` 테이블 (PK = `cancellationId`)
-- [ ] `payment.cancelled_amount` 누적 컬럼, `pg_cancellation_id` / `cancelled_at` 제거
-- [ ] `PaymentStatus`에서 `CANCEL_*` 제거, `CancellationStatus` 신설
-- [ ] 취소 복구 스케줄러를 새 테이블로 이사
-- [ ] 가드 — 미확정 취소 1건 제한, `cancelled_amount + 요청금액 <= amount`
-- [ ] `PortOneGetPaymentResponseDto`에 누적 취소 금액 매핑
+- [x] `payment_cancellation` 테이블 (PK = `cancellationId`), 진행 중 취소 1건 부분 유니크 인덱스 (V3)
+- [x] `pg_cancellation_id` / `cancelled_at` 제거. 취소 금액은 누적 컬럼 대신 `Payment`가 계산 (ADR 0005)
+- [x] `PaymentStatus`에서 `CANCEL_*` 제거, `CancellationStatus` 신설
+- [x] 취소 흐름 분리 — `PaymentCancelProcessService` / `PaymentCancelTransactionManager` / `PaymentCancelRecoverService` / `PaymentCancellationRepository`(조회 전용)
+- [x] 가드 — 진행 중 취소 1건, 같은 `cancellationId` 재요청, 취소 합계 + 요청 금액 ≤ 결제 금액
+- [x] 응답 `SUCCEEDED`/`FAILED`/`REQUESTED` 처리, 폴링은 `amount.cancelled` 일치로 확정 (ADR 0007)
+- [x] `currentCancellableAmount`, 멱등키 = `cancellationId`
+- [x] `CancelPaymentRequestDto`를 `payment-api`에서 `payment-service`로 이동 (서비스 간 프로토콜 아님)
 
 ### 5-3. `order`
 
@@ -123,6 +125,7 @@
 - [ ] `orders.status`에서 취소 관련 값 제거
 - [ ] 가드 — 미확정 취소 1건 제한, 수량 초과 시 요청 전체 거절
 - [ ] 결과 수신 시 해당 취소 건만 확정, 실패면 수량 되돌림 (미확정이면 되돌리지 않음)
+- [ ] 취소 성공 시 그 취소 건의 수량만큼 재고 복원 (4번에서 넘어옴)
 
 **완료 조건** — 상품 2개 중 1개만 취소했을 때 금액·수량이 양쪽 모듈에서 맞고, 나머지 1개를 이어서 취소할 수 있음
 
@@ -132,3 +135,5 @@
 
 - `OrderRecoverService`, `common:outbox`의 `EventPublisher`에도 같은 중복 폴링 문제가 있다
 - 묶음 취소 UI가 실제로 필요한지 — 필요 없으면 `order_cancellation_product`를 떼어낼 수 있다
+- 주문 취소 결과 조회 API — 취소 API는 접수만 응답하므로 클라이언트가 결과를 볼 곳이 없다
+- PortOne 취소 웹훅(`Transaction.CancelPending`/`Cancelled`/`PartialCancelled`) — 비동기 취소(`REQUESTED`)가 4회 확인보다 오래 걸리면 `UNKNOWN`으로 넘어감. 실제 PG사에서 `REQUESTED`가 오는지 먼저 확인

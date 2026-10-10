@@ -58,7 +58,7 @@ class PaymentDBRepositoryTest {
         insert(2L, PaymentStatus.PENDING, 1, NOW.minusSeconds(9));    // 아직 10초 안 지남
         insert(3L, PaymentStatus.PENDING, 0, NOW.minusSeconds(11));   // 횟수 범위 밖 (아래)
         insert(4L, PaymentStatus.PENDING, 4, NOW.minusSeconds(11));   // 횟수 범위 밖 (위)
-        insert(5L, PaymentStatus.CANCELING, 1, NOW.minusSeconds(11)); // 상태 다름
+        insert(5L, PaymentStatus.SUCCEEDED, 1, NOW.minusSeconds(11)); // 상태 다름
 
         // when
         List<Payment> claimed = claim(1, 3, 10, NOW, 10);

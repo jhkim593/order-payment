@@ -26,9 +26,11 @@ public class PortOneCancelPaymentRequestDto {
         private String holderName;
     }
 
-    public static PortOneCancelPaymentRequestDto create(String reason) {
+    public static PortOneCancelPaymentRequestDto create(String reason, long amount, long currentCancellableAmount) {
         return PortOneCancelPaymentRequestDto.builder()
                 .reason(reason)
+                .amount(amount)
+                .currentCancellableAmount(currentCancellableAmount)
                 .build();
     }
 }

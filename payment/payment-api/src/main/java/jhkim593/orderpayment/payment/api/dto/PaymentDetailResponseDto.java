@@ -17,7 +17,6 @@ public class PaymentDetailResponseDto {
     private Integer amount;
     private String status;
     private LocalDateTime paidAt;
-    private LocalDateTime cancelledAt;
 
     @Getter
     @Builder

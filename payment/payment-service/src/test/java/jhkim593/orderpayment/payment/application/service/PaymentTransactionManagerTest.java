@@ -5,7 +5,6 @@ import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentMethod;
 import jhkim593.orderpayment.payment.domain.PaymentStatus;
 import jhkim593.orderpayment.payment.domain.PgProvider;
-import jhkim593.orderpayment.payment.fake.FakeInternalEventPublisher;
 import jhkim593.orderpayment.payment.fake.FakePaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,7 @@ class PaymentTransactionManagerTest {
     void setUp() {
         paymentRepository = new FakePaymentRepository();
         paymentTransactionManager = new PaymentTransactionManager(
-                paymentRepository, null, () -> 1L, new FakeInternalEventPublisher());
+                paymentRepository, null, () -> 1L);
     }
 
     @Test

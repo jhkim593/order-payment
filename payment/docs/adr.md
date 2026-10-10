@@ -4,6 +4,37 @@
 
 ---
 
+## 0007. 부분 취소 결과는 결제사의 누적 취소 금액으로 확정한다
+
+**상태:** 승인 · 2026-10-07
+
+### 맥락
+
+- 부분 취소 후 결제사 결제 상태는 `PARTIAL_CANCELLED`라, 상태(`CANCELLED`)로는 취소 반영을 판정할 수 없다
+- 취소 응답의 `cancellation.status`가 `REQUESTED`(PG사 처리 중)일 수 있다
+- PortOne 취소 요청에 `currentCancellableAmount`(직전 취소 가능 잔액)를 넣으면 잔액이 일치할 때만 취소된다
+
+### 결정
+
+- 요청: `currentCancellableAmount` = 이번 요청 직전 잔액, 멱등키 = `cancellationId`
+- 요청 응답: `SUCCEEDED` → 성공, `FAILED`·4xx → 실패, `REQUESTED`·5xx·타임아웃 → `PENDING` 유지 후 폴링
+- 폴링: 결제사 `amount.cancelled`가 예상 누적 취소(성공한 취소 합계 + 확인 중인 건)와 일치하면 성공. 아니면 한도까지 대기 후 `UNKNOWN`
+- 같은 `cancellationId`가 다시 오면 결제사를 부르지 않고 넘긴다
+
+### 이유
+
+- 미확정 취소가 결제당 하나(0004)라 금액 증가만 보면 우리 건의 반영 여부를 알 수 있다
+- 누적 금액은 "아직 처리 중"과 "거절됨"을 구분하지 못해, 폴링에서는 실패를 확정하지 않는다
+- `currentCancellableAmount`는 기한이 없는 이중 환불 방어다. 멱등키는 3시간 뒤 만료된다
+- `REQUESTED`를 성공으로 보면 PG사가 나중에 거절했을 때 환불 안 된 취소를 성공으로 통지한다
+
+### 대안
+
+- **`cancellations` 배열에서 우리 건의 `FAILED`를 찾아 폴링 실패 확정** — 우리 식별자가 없어 금액·시각으로 짝지어야 한다. 0004가 피하려던 매핑
+- **폴링에서 결제사 상태 `PAID`면 실패 확정 (기존)** — 이전 부분 취소가 있으면 상태가 `PARTIAL_CANCELLED`라 판정 불가
+
+---
+
 ## 0006. 확인 한도를 다 쓴 결제는 별도 스케줄러가 UNKNOWN으로 전환한다
 
 **상태:** 승인 · 2026-10-05
@@ -61,13 +92,15 @@ status = :status AND check_count >= CHECK_LIMIT AND checked_at < now - CHECK_INT
 
 `payment_cancellation` 테이블로 취소를 분리한다. 각 취소 건이 자기 금액·상태·확인 횟수를 갖는다.
 
-`payment`에는 `cancelled_amount`(누적)가 들어가고 `pg_cancellation_id`, `cancelled_at`은 빠진다. 결제가 전부 취소됐는지는 `cancelled_amount == amount`로 판단한다.
+취소된 금액은 `Payment`가 취소 목록에서 계산한다(실패 건 제외 합계).
 
 ### 이유
 
 한 결제의 취소 2건이 서로 다른 상태로 진행되는 것이 정상인 구조가 되어야 한다. 한 행으로는 표현할 수 없다.
 
-누적 컬럼을 두는 것은 초과 취소 가드(`cancelled_amount + 요청금액 <= amount`)를 매번 집계 없이 걸기 위해서다. 취소 요청 시 누적하고, 실패로 확정되면 되돌린다.
+### 대안
+
+- **취소 금액 누적 컬럼(반정규화)** — 집계 없이 가드를 걸 수 있지만 요청 시 올리고 실패 시 내리는 동기화가 필요하다. 동시 요청은 미확정 취소 1건 제한(0004)이 막고, 취소 건수가 적어 메모리 합계로 충분하다
 
 ---
 

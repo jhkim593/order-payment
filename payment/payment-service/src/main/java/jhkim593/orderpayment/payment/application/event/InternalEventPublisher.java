@@ -4,7 +4,7 @@ import jhkim593.orderpayment.payment.domain.Payment;
 
 public interface InternalEventPublisher {
 
-    void paymentCancelFailedEventPublish(Payment payment);
+    void paymentCancelFailedEventPublish(Payment payment, Long cancellationId);
 
-    void paymentCancelSucceededEventPublish(Payment payment);
+    void paymentCancelSucceededEventPublish(Payment payment, Long cancellationId);
 }

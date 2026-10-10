@@ -87,73 +87,101 @@ class PaymentTest {
     }
 
     @Test
-    void canceling() {
+    void 남은_금액_안에서_일부만_취소할_수_있다() {
         // given
-        Payment payment = createSucceededPayment();
+        Payment payment = createSucceededPayment();   // 10,000
 
         // when
-        payment.canceling();
+        PaymentCancellation cancellation = payment.canceling(100L, 3000, "reason");
 
         // then
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELING);
+        assertThat(cancellation.getStatus()).isEqualTo(CancellationStatus.PENDING);
+        assertThat(cancellation.getAmount()).isEqualTo(3000);
     }
 
     @Test
-    void canceling_succeeded아닐때_예외() {
+    void 결제가_완료되지_않았으면_취소할_수_없다() {
         // given
         Payment payment = createPendingPayment();
 
         // when & then
-        PaymentException exception = catchThrowableOfType(PaymentException.class, payment::canceling);
+        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.canceling(100L, 3000, "reason"));
         assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_SUCCEEDED);
     }
 
     @Test
-    void cancelSucceeded() {
+    void 남은_금액을_넘겨_취소할_수_없다() {
         // given
-        Payment payment = createCancelingPayment();
-        String pgCancellationId = "pg_cancel_123";
-        LocalDateTime cancelledAt = LocalDateTime.now();
-
-        // when
-        payment.cancelSucceeded(pgCancellationId, cancelledAt);
-
-        // then
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCEL_SUCCEEDED);
-        assertThat(payment.getPgCancellationId()).isEqualTo(pgCancellationId);
-        assertThat(payment.getCancelledAt()).isEqualTo(cancelledAt);
-    }
-
-    @Test
-    void cancelSucceeded_canceling아닐때_예외() {
-        // given
-        Payment payment = createPendingPayment();
+        Payment payment = createSucceededPayment();
+        payment.canceling(100L, 7000, "reason");
+        payment.cancelSucceeded(100L, "pg_cancel_1", LocalDateTime.now());
 
         // when & then
-        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.cancelSucceeded("pg_cancel_123", LocalDateTime.now()));
-        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_CANCELING);
+        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.canceling(101L, 3001, "reason"));
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.CANCEL_AMOUNT_EXCEEDED);
     }
 
     @Test
-    void cancelFailed_from_canceling() {
+    void 처리_중인_취소가_있으면_새_취소를_받지_않는다() {
         // given
-        Payment payment = createCancelingPayment();
-
-        // when
-        payment.cancelFailed();
-
-        // then
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCEL_FAILED);
-    }
-
-    @Test
-    void cancelFailed_canceling아닐때_예외() {
-        // given
-        Payment payment = createPendingPayment();
+        Payment payment = createSucceededPayment();
+        payment.canceling(100L, 3000, "reason");
 
         // when & then
-        PaymentException exception = catchThrowableOfType(PaymentException.class, payment::cancelFailed);
-        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_CANCELING);
+        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.canceling(101L, 1000, "reason"));
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.CANCEL_IN_PROGRESS);
+    }
+
+    @Test
+    void 결과를_확정하지_못한_취소가_있으면_새_취소를_받지_않는다() {
+        // given
+        Payment payment = createSucceededPayment();
+        payment.canceling(100L, 3000, "reason");
+        payment.cancelUnknown(100L);
+
+        // when & then
+        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.canceling(101L, 1000, "reason"));
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.CANCEL_IN_PROGRESS);
+    }
+
+    @Test
+    void 같은_취소를_다시_요청하면_받지_않는다() {
+        // given
+        Payment payment = createSucceededPayment();
+        payment.canceling(100L, 3000, "reason");
+        payment.cancelSucceeded(100L, "pg_cancel_1", LocalDateTime.now());
+
+        // when & then
+        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.canceling(100L, 3000, "reason"));
+        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.CANCEL_IN_PROGRESS);
+    }
+
+    @Test
+    void 실패한_취소_금액은_다시_취소할_수_있다() {
+        // given
+        Payment payment = createSucceededPayment();
+        payment.canceling(100L, 10000, "reason");
+        payment.cancelFailed(100L);
+
+        // when
+        PaymentCancellation retry = payment.canceling(101L, 10000, "reason");
+
+        // then
+        assertThat(retry.getStatus()).isEqualTo(CancellationStatus.PENDING);
+    }
+
+    @Test
+    void 결제사_누적_취소_금액이_예상과_일치할_때만_취소가_반영된_것으로_본다() {
+        // given
+        Payment payment = createSucceededPayment();
+        payment.canceling(100L, 3000, "reason");
+        payment.cancelSucceeded(100L, "pg_cancel_1", LocalDateTime.now());
+        payment.canceling(101L, 2000, "reason");
+
+        // when & then
+        assertThat(payment.isCancelledAmountMatched(3000)).isFalse();   // 아직 미반영
+        assertThat(payment.isCancelledAmountMatched(5000)).isTrue();
+        assertThat(payment.isCancelledAmountMatched(6000)).isFalse();   // 모르는 취소가 섞임
     }
 
     @Test
@@ -182,20 +210,6 @@ class PaymentTest {
     }
 
     @Test
-    void 취소를_시작하면_결제에서_쓴_확인횟수가_초기화된다() {
-        // given
-        Payment payment = createPendingPayment();
-        checks(payment, 2);
-        payment.succeeded("pg_tx_123", LocalDateTime.now());
-
-        // when
-        payment.canceling();
-
-        // then
-        assertThat(payment.getCheckCount()).isZero();
-    }
-
-    @Test
     void 결제_상태를_확정하지_못하면_UNKNOWN이_된다() {
         // given
         Payment payment = createPendingPayment();
@@ -217,34 +231,6 @@ class PaymentTest {
         assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_PENDING);
     }
 
-    @Test
-    void 취소_상태를_확정하지_못하면_CANCEL_UNKNOWN이_된다() {
-        // given
-        Payment payment = createCancelingPayment();
-
-        // when
-        payment.cancelUnknown();
-
-        // then
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCEL_UNKNOWN);
-    }
-
-    @Test
-    void cancelUnknown_canceling아닐때_예외() {
-        // given
-        Payment payment = createPendingPayment();
-
-        // when & then
-        PaymentException exception = catchThrowableOfType(PaymentException.class, payment::cancelUnknown);
-        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_CANCELING);
-    }
-
-    private void checks(Payment payment, int times) {
-        for (int i = 0; i < times; i++) {
-            payment.check(LocalDateTime.now());
-        }
-    }
-
     private Payment createPendingPayment() {
         return Payment.create(PAYMENT_ID, createPaymentMethod(), createRequest());
     }
@@ -252,12 +238,6 @@ class PaymentTest {
     private Payment createSucceededPayment() {
         Payment payment = createPendingPayment();
         payment.succeeded("pg_tx_123", LocalDateTime.now());
-        return payment;
-    }
-
-    private Payment createCancelingPayment() {
-        Payment payment = createSucceededPayment();
-        payment.canceling();
         return payment;
     }
 

@@ -1,12 +1,11 @@
 package jhkim593.orderpayment.payment.adapter.event.handler;
 
-import jhkim593.orderpayment.payment.api.dto.CancelPaymentRequestDto;
 import jhkim593.orderpayment.common.core.event.EventData;
 import jhkim593.orderpayment.common.core.event.EventType;
 import jhkim593.orderpayment.common.core.event.order.payload.OrderCancelEventPayload;
 import jhkim593.orderpayment.payment.adapter.event.EventHandler;
-import jhkim593.orderpayment.payment.application.provided.PaymentProcessor;
-import jhkim593.orderpayment.payment.domain.error.PaymentException;
+import jhkim593.orderpayment.payment.application.provided.PaymentCancelProcessor;
+import jhkim593.orderpayment.payment.domain.dto.CancelPaymentRequestDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,21 +14,22 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class OrderCancelEventHandler implements EventHandler<OrderCancelEventPayload> {
-    private final PaymentProcessor paymentProcessor;
+    private final PaymentCancelProcessor paymentCancelProcessor;
 
     @Override
     public void handle(EventData<OrderCancelEventPayload> eventData) {
-        Long orderId = eventData.getPayload().getOrderId();
-        String reason = eventData.getPayload().getReason();
+        OrderCancelEventPayload payload = eventData.getPayload();
 
-        log.info("Order cancel event received. orderId={}, reason={}", orderId, reason);
+        log.info("Order cancel event received. orderId={}, cancellationId={}, amount={}",
+                payload.getOrderId(), payload.getCancellationId(), payload.getAmount());
 
         CancelPaymentRequestDto request = CancelPaymentRequestDto.builder()
-                .reason(reason)
+                .cancellationId(payload.getCancellationId())
+                .amount(payload.getAmount())
+                .reason(payload.getReason())
                 .build();
 
-        paymentProcessor.cancelPayment(orderId, request);
-        log.info("Payment cancelled successfully. orderId={}", orderId);
+        paymentCancelProcessor.cancelPayment(payload.getOrderId(), request);
     }
 
     @Override
@@ -37,4 +37,3 @@ public class OrderCancelEventHandler implements EventHandler<OrderCancelEventPay
         return EventType.ORDER_CANCEL;
     }
 }
-

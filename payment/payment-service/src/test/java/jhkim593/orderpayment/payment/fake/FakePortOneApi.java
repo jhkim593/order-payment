@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 public class FakePortOneApi implements PortOneApi {
 
     private String paymentStatus = "READY";
+    private long cancelledAmount;
+    private String cancellationStatus = "SUCCEEDED";
     private RuntimeException requestFailure;
 
     private int billingKeyPaymentCount;
@@ -20,6 +22,14 @@ public class FakePortOneApi implements PortOneApi {
 
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public void setCancelledAmount(long cancelledAmount) {
+        this.cancelledAmount = cancelledAmount;
+    }
+
+    public void setCancellationStatus(String cancellationStatus) {
+        this.cancellationStatus = cancellationStatus;
     }
 
     public void setRequestFailure(RuntimeException requestFailure) {
@@ -62,6 +72,7 @@ public class FakePortOneApi implements PortOneApi {
         }
         return PortOneCancelPaymentResponseDto.builder()
                 .cancellation(PortOneCancelPaymentResponseDto.PaymentCancellation.builder()
+                        .status(cancellationStatus)
                         .pgCancellationId("pg_cancel_123")
                         .cancelledAt(LocalDateTime.now())
                         .build())
@@ -75,6 +86,7 @@ public class FakePortOneApi implements PortOneApi {
                 .status(paymentStatus)
                 .pgTxId("pg_tx_123")
                 .paidAt(LocalDateTime.now())
+                .amount(PortOneGetPaymentResponseDto.Amount.builder().cancelled(cancelledAmount).build())
                 .build();
     }
 }

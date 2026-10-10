@@ -9,6 +9,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "payment")
@@ -46,12 +48,7 @@ public class Payment {
 
     private String pgTransactionId;
 
-    private String pgCancellationId;
-
     private LocalDateTime paidAt;
-
-    @Column(updatable = false)
-    private LocalDateTime cancelledAt;
 
     @Column(nullable = false)
     private LocalDateTime statusUpdatedAt;
@@ -62,6 +59,10 @@ public class Payment {
 
     @Column(nullable = false)
     private LocalDateTime checkedAt;
+
+    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<PaymentCancellation> cancellations = new ArrayList<>();
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
@@ -104,24 +105,6 @@ public class Payment {
         this.statusUpdatedAt = LocalDateTime.now();
     }
 
-    public void cancelSucceeded(String pgCancellationId, LocalDateTime cancelledAt) {
-        if (!this.status.equals(PaymentStatus.CANCELING)) {
-            throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_CANCELING);
-        }
-        this.pgCancellationId = pgCancellationId;
-        this.cancelledAt = cancelledAt;
-        this.status = PaymentStatus.CANCEL_SUCCEEDED;
-        this.statusUpdatedAt = LocalDateTime.now();
-    }
-
-    public void cancelFailed() {
-        if (!this.status.equals(PaymentStatus.CANCELING)) {
-            throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_CANCELING);
-        }
-        this.status = PaymentStatus.CANCEL_FAILED;
-        this.statusUpdatedAt = LocalDateTime.now();
-    }
-
     public String billingKey() {
         if (paymentMethod == null) {
             throw new PaymentException(PaymentErrorCode.PAYMENT_METHOD_NOT_FOUND);
@@ -137,26 +120,60 @@ public class Payment {
         this.statusUpdatedAt = LocalDateTime.now();
     }
 
-    public void cancelUnknown() {
-        if (!this.status.equals(PaymentStatus.CANCELING)) {
-            throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_CANCELING);
-        }
-        this.status = PaymentStatus.CANCEL_UNKNOWN;
-        this.statusUpdatedAt = LocalDateTime.now();
-    }
-
     public void check(LocalDateTime checkedAt) {
         this.checkCount++;
         this.checkedAt = checkedAt;
     }
 
-    public void canceling(){
-        if(!this.status.equals(PaymentStatus.SUCCEEDED)){
+    public PaymentCancellation canceling(Long cancellationId, int amount, String reason) {
+        if (!this.status.equals(PaymentStatus.SUCCEEDED)) {
             throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_SUCCEEDED);
         }
-        this.status = PaymentStatus.CANCELING;
-        this.statusUpdatedAt = LocalDateTime.now();
-        this.checkCount = 0;
-        this.checkedAt = LocalDateTime.now();
+        if (cancellations.stream().anyMatch(c -> c.getCancellationId().equals(cancellationId))) {
+            throw new PaymentException(PaymentErrorCode.CANCEL_IN_PROGRESS);
+        }
+        if (cancellations.stream().anyMatch(PaymentCancellation::isInProgress)) {
+            throw new PaymentException(PaymentErrorCode.CANCEL_IN_PROGRESS);
+        }
+        if (amount <= 0 || cancelledAmount() + amount > this.amount) {
+            throw new PaymentException(PaymentErrorCode.CANCEL_AMOUNT_EXCEEDED);
+        }
+        PaymentCancellation cancellation = PaymentCancellation.create(cancellationId, this, amount, reason);
+        cancellations.add(cancellation);
+        return cancellation;
+    }
+
+    public int cancellableAmountBefore(Long cancellationId) {
+        return this.amount - cancelledAmount() + cancellation(cancellationId).getAmount();
+    }
+
+    public boolean isCancelledAmountMatched(long pgCancelledAmount) {
+        return pgCancelledAmount == cancelledAmount();
+    }
+
+    public void cancelSucceeded(Long cancellationId, String pgCancellationId, LocalDateTime cancelledAt) {
+        cancellation(cancellationId).succeeded(pgCancellationId, cancelledAt);
+    }
+
+    public void cancelFailed(Long cancellationId) {
+        cancellation(cancellationId).failed();
+    }
+
+    public void cancelUnknown(Long cancellationId) {
+        cancellation(cancellationId).unknown();
+    }
+
+    private int cancelledAmount() {
+        return cancellations.stream()
+                .filter(c -> !c.isFailed())
+                .mapToInt(PaymentCancellation::getAmount)
+                .sum();
+    }
+
+    private PaymentCancellation cancellation(Long cancellationId) {
+        return cancellations.stream()
+                .filter(c -> c.getCancellationId().equals(cancellationId))
+                .findFirst()
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.CANCELLATION_NOT_FOUND));
     }
 }

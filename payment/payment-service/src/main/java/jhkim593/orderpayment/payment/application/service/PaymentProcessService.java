@@ -1,7 +1,6 @@
 package jhkim593.orderpayment.payment.application.service;
 
 import jhkim593.orderpayment.payment.api.dto.BillingKeyPaymentRequestDto;
-import jhkim593.orderpayment.payment.api.dto.CancelPaymentRequestDto;
 import jhkim593.orderpayment.payment.adapter.client.portone.PortOneApiManager;
 import jhkim593.orderpayment.payment.application.provided.PaymentProcessor;
 import jhkim593.orderpayment.payment.domain.Payment;
@@ -42,26 +41,6 @@ public class PaymentProcessService implements PaymentProcessor {
         return payment;
     }
 
-    @Override
-    public Payment cancelPayment(Long orderId, CancelPaymentRequestDto request){
-        Payment payment = paymentTransactionManager.canceling(orderId);
-
-        PortOneCancelPaymentRequestDto cancelRequest =
-                PortOneCancelPaymentRequestDto.create(request.getReason());
-
-        PortOneCancelPaymentResponseDto response;
-        try {
-            response = portOneApiManager.cancelPayment(payment.getPaymentId(), cancelRequest);
-        } catch (PaymentException e) {
-            if (PaymentErrorCode.PG_PAYMENT_FAILED.equals(e.getErrorCode())) {
-                updateCancelFailed(payment, (PortOneApiException) e.getCause());
-            }
-            throw e;
-        }
-        payment = updateCancelSucceeded(payment, response.getCancellation().getPgCancellationId(), response.getCancellation().getCancelledAt());
-        return payment;
-    }
-
     private Payment updateSucceeded(Payment payment, String pgTxId, LocalDateTime paidAt) {
         try {
             return paymentTransactionManager.succeeded(payment, pgTxId, paidAt);
@@ -76,23 +55,6 @@ public class PaymentProcessService implements PaymentProcessor {
             paymentTransactionManager.failed(payment, exception);
         } catch (Exception e) {
             log.error("Failed to update FAILED, paymentId={}", payment.getPaymentId(), e);
-        }
-    }
-
-    private Payment updateCancelSucceeded(Payment payment, String pgCancellationId, LocalDateTime cancelledAt) {
-        try {
-            return paymentTransactionManager.cancelSucceeded(payment, pgCancellationId, cancelledAt);
-        } catch (Exception e) {
-            log.error("Failed to update CANCEL_SUCCEEDED, paymentId={}", payment.getPaymentId(), e);
-            return payment;
-        }
-    }
-
-    private void updateCancelFailed(Payment payment, PortOneApiException exception) {
-        try {
-            paymentTransactionManager.cancelFailed(payment, exception);
-        } catch (Exception e) {
-            log.error("Failed to update CANCEL_FAILED, paymentId={}", payment.getPaymentId(), e);
         }
     }
 }
