@@ -13,8 +13,7 @@ public enum PaymentErrorCode {
     PAYMENT_ALREADY_EXISTS("P005", 400,"payment already exists for this order", false),
     PG_PAYMENT_UNKNOWN("P006", 503,"PG payment result is unknown, please check later", false),
     PG_PAYMENT_FAILED("P007", 400,"PG payment failed", false),
-    CANCEL_IN_PROGRESS("P008", 409,"another cancellation is in progress", false),
-    CANCEL_AMOUNT_EXCEEDED("P009", 400,"cancel amount exceeds cancellable amount", false),
+    CANCEL_IN_PROGRESS("P008", 409,"cancellation already requested", false),
     CANCELLATION_NOT_FOUND("P010", 404,"cancellation not found", false);
 
     private final String code;

@@ -5,7 +5,7 @@ CREATE TABLE payment_cancellation
 (
     cancellation_id    BIGINT PRIMARY KEY,
     payment_id         BIGINT       NOT NULL REFERENCES payment (payment_id),
-    amount             INTEGER      NOT NULL CHECK (amount > 0),
+    amount             INTEGER      NOT NULL,
     reason             TEXT         NOT NULL,
     status             VARCHAR(20)  NOT NULL,
     pg_cancellation_id VARCHAR(256),

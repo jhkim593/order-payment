@@ -100,48 +100,56 @@ class PaymentTest {
     }
 
     @Test
-    void 결제가_완료되지_않았으면_취소할_수_없다() {
+    void 결제가_완료되지_않았으면_취소는_실패로_처리된다() {
         // given
         Payment payment = createPendingPayment();
 
-        // when & then
-        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.canceling(100L, 3000, "reason"));
-        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.PAYMENT_NOT_SUCCEEDED);
+        // when
+        PaymentCancellation cancellation = payment.canceling(100L, 3000, "reason");
+
+        // then
+        assertThat(cancellation.getStatus()).isEqualTo(CancellationStatus.FAILED);
     }
 
     @Test
-    void 남은_금액을_넘겨_취소할_수_없다() {
+    void 남은_금액을_넘긴_취소는_실패로_처리된다() {
         // given
         Payment payment = createSucceededPayment();
         payment.canceling(100L, 7000, "reason");
         payment.cancelSucceeded(100L, "pg_cancel_1", LocalDateTime.now());
 
-        // when & then
-        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.canceling(101L, 3001, "reason"));
-        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.CANCEL_AMOUNT_EXCEEDED);
+        // when
+        PaymentCancellation cancellation = payment.canceling(101L, 3001, "reason");
+
+        // then
+        assertThat(cancellation.getStatus()).isEqualTo(CancellationStatus.FAILED);
     }
 
     @Test
-    void 처리_중인_취소가_있으면_새_취소를_받지_않는다() {
+    void 처리_중인_취소가_있으면_새_취소는_실패로_처리된다() {
         // given
         Payment payment = createSucceededPayment();
         payment.canceling(100L, 3000, "reason");
 
-        // when & then
-        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.canceling(101L, 1000, "reason"));
-        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.CANCEL_IN_PROGRESS);
+        // when
+        PaymentCancellation cancellation = payment.canceling(101L, 1000, "reason");
+
+        // then
+        assertThat(cancellation.getStatus()).isEqualTo(CancellationStatus.FAILED);
     }
 
     @Test
-    void 결과를_확정하지_못한_취소가_있으면_새_취소를_받지_않는다() {
+    void 결과를_확정하지_못한_취소가_있으면_새_취소는_실패로_처리된다() {
         // given
         Payment payment = createSucceededPayment();
         payment.canceling(100L, 3000, "reason");
         payment.cancelUnknown(100L);
 
-        // when & then
-        PaymentException exception = catchThrowableOfType(PaymentException.class, () -> payment.canceling(101L, 1000, "reason"));
-        assertThat(exception.getErrorCode()).isEqualTo(PaymentErrorCode.CANCEL_IN_PROGRESS);
+        // when
+        PaymentCancellation cancellation = payment.canceling(101L, 1000, "reason");
+
+        // then
+        assertThat(cancellation.getStatus()).isEqualTo(CancellationStatus.FAILED);
     }
 
     @Test

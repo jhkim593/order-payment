@@ -1,6 +1,9 @@
 package jhkim593.orderpayment.order.application;
 
 import jhkim593.orderpayment.order.domain.Order;
+import jhkim593.orderpayment.order.domain.OrderCancellation;
+import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
+import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto.CancelItemRequestDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto.OrderItemRequestDto;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
@@ -9,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -96,15 +100,37 @@ class OrderStockIntegrationTest {
     }
 
     @Test
-    void 취소가_성공하면_재고를_되돌린다() {
+    void 취소가_성공하면_취소한_수량만큼_재고를_되돌린다() {
+        Long productId = createProduct(10);
+        Order order = orderTransactionManager.createOrder(request(item(productId, 3)));   // 10 → 7
+        orderTransactionManager.succeeded(order.getOrderId());
+        OrderCancellation cancellation = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 1));
+
+        orderTransactionManager.cancelSucceeded(order.getOrderId(), cancellation.getCancellationId());
+
+        assertThat(stockOf(productId)).isEqualTo(8);
+    }
+
+    @Test
+    void 취소가_실패하면_재고를_되돌리지_않는다() {
         Long productId = createProduct(10);
         Order order = orderTransactionManager.createOrder(request(item(productId, 3)));
         orderTransactionManager.succeeded(order.getOrderId());
-        orderTransactionManager.canceling(order.getOrderId(), "");
+        OrderCancellation cancellation = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 1));
 
-        orderTransactionManager.cancelSucceeded(order.getOrderId());
+        orderTransactionManager.cancelFailed(order.getOrderId(), cancellation.getCancellationId());
 
-        assertThat(stockOf(productId)).isEqualTo(10);
+        assertThat(stockOf(productId)).isEqualTo(7);
+    }
+
+    @Test
+    void 한_주문에_처리_중인_취소는_하나만_둘_수_있다() {
+        Long productId = createProduct(10);
+        Order order = orderTransactionManager.createOrder(request(item(productId, 3)));
+        insertPendingCancellation(1L, order.getOrderId());
+
+        assertThatThrownBy(() -> insertPendingCancellation(2L, order.getOrderId()))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
@@ -136,6 +162,18 @@ class OrderStockIntegrationTest {
 
     private int stockOf(Long productId) {
         return jdbcTemplate.queryForObject("SELECT stock FROM product WHERE product_id = ?", Integer.class, productId);
+    }
+
+    private void insertPendingCancellation(Long cancellationId, Long orderId) {
+        jdbcTemplate.update("""
+                INSERT INTO order_cancellation (cancellation_id, order_id, amount, reason, status, status_updated_at, created_at, updated_at)
+                VALUES (?, ?, 1000, 'reason', 'PENDING', NOW(), NOW(), NOW())
+                """, cancellationId, orderId);
+    }
+
+    private CancelOrderRequestDto cancelRequest(Order order, int quantity) {
+        Long orderProductId = order.getOrderProducts().get(0).getOrderProductId();
+        return new CancelOrderRequestDto("reason", List.of(new CancelItemRequestDto(orderProductId, quantity)));
     }
 
     private OrderProcessRequestDto request(OrderItemRequestDto... items) {

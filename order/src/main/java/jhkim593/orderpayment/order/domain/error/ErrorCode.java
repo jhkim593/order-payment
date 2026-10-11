@@ -9,9 +9,15 @@ public enum ErrorCode {
     ORDER_NOT_FOUND("O001", 404, "order not found", false),
     DUPLICATE_ORDER_PRODUCT("O006", 400, "duplicate product in order", false),
     ORDER_ALREADY_COMPLETED("O002", 400, "order already completed", false),
-    ORDER_ALREADY_CANCEL_COMPLETED("O003", 400, "order already cancel completed", false),
+    CANCELLATION_NOT_PENDING("O003", 400, "cancellation not pending", false),
     ORDER_NOT_SUCCEEDED("O004", 400, "order not succeeded", false),
-    ORDER_PROCESSING_DELAYED("O005", 503, "order processing is delayed, please check later", false);
+    ORDER_PROCESSING_DELAYED("O005", 503, "order processing is delayed, please check later", false),
+    CANCEL_IN_PROGRESS("O007", 409, "another cancellation is in progress", false),
+    CANCEL_QUANTITY_EXCEEDED("O008", 400, "cancel quantity exceeds remaining quantity", false),
+    INVALID_CANCEL_QUANTITY("O009", 400, "cancel quantity must be positive", false),
+    ORDER_PRODUCT_NOT_FOUND("O010", 400, "product not in order", false),
+    CANCEL_ITEMS_EMPTY("O011", 400, "cancel items empty", false),
+    CANCELLATION_NOT_FOUND("O012", 404, "cancellation not found", false);
 
     private final String code;
     private final int status;

@@ -126,20 +126,17 @@ public class Payment {
     }
 
     public PaymentCancellation canceling(Long cancellationId, int amount, String reason) {
-        if (!this.status.equals(PaymentStatus.SUCCEEDED)) {
-            throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_SUCCEEDED);
-        }
         if (cancellations.stream().anyMatch(c -> c.getCancellationId().equals(cancellationId))) {
             throw new PaymentException(PaymentErrorCode.CANCEL_IN_PROGRESS);
         }
-        if (cancellations.stream().anyMatch(PaymentCancellation::isInProgress)) {
-            throw new PaymentException(PaymentErrorCode.CANCEL_IN_PROGRESS);
-        }
-        if (amount <= 0 || cancelledAmount() + amount > this.amount) {
-            throw new PaymentException(PaymentErrorCode.CANCEL_AMOUNT_EXCEEDED);
-        }
+        boolean cancellable = PaymentStatus.SUCCEEDED.equals(status)
+                && cancellations.stream().noneMatch(PaymentCancellation::isInProgress)
+                && amount > 0 && cancelledAmount() + amount <= this.amount;
         PaymentCancellation cancellation = PaymentCancellation.create(cancellationId, this, amount, reason);
         cancellations.add(cancellation);
+        if (!cancellable) {
+            cancellation.failed();
+        }
         return cancellation;
     }
 

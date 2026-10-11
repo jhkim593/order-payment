@@ -4,6 +4,7 @@ import jhkim593.orderpayment.payment.adapter.client.portone.PortOneApiManager;
 import jhkim593.orderpayment.payment.api.error.PaymentErrorCode;
 import jhkim593.orderpayment.payment.application.provided.PaymentCancelProcessor;
 import jhkim593.orderpayment.payment.domain.Payment;
+import jhkim593.orderpayment.payment.domain.PaymentCancellation;
 import jhkim593.orderpayment.payment.domain.dto.CancelPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.dto.PortOneCancelPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.dto.PortOneCancelPaymentResponseDto;
@@ -24,7 +25,11 @@ public class PaymentCancelProcessService implements PaymentCancelProcessor {
     @Override
     public void cancelPayment(Long orderId, CancelPaymentRequestDto request) {
         Long cancellationId = request.getCancellationId();
-        Payment payment = paymentCancelTransactionManager.canceling(orderId, cancellationId, request.getAmount(), request.getReason());
+        PaymentCancellation cancellation = paymentCancelTransactionManager.canceling(orderId, cancellationId, request.getAmount(), request.getReason());
+        if (cancellation.isFailed()) {
+            return;
+        }
+        Payment payment = cancellation.getPayment();
         Long paymentId = payment.getPaymentId();
 
         PortOneCancelPaymentRequestDto cancelRequest = PortOneCancelPaymentRequestDto.create(

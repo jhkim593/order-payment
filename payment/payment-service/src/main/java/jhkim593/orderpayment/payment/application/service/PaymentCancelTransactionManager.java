@@ -24,10 +24,14 @@ public class PaymentCancelTransactionManager {
     private final InternalEventPublisher eventPublisher;
 
     @Transactional
-    public Payment canceling(Long orderId, Long cancellationId, int amount, String reason) {
+    public PaymentCancellation canceling(Long orderId, Long cancellationId, int amount, String reason) {
         Payment payment = paymentRepository.findByOrderId(orderId);
-        payment.canceling(cancellationId, amount, reason);
-        return paymentRepository.save(payment);
+        PaymentCancellation cancellation = payment.canceling(cancellationId, amount, reason);
+        paymentRepository.save(payment);
+        if (cancellation.isFailed()) {
+            eventPublisher.paymentCancelFailedEventPublish(payment, cancellationId);
+        }
+        return cancellation;
     }
 
     @Transactional

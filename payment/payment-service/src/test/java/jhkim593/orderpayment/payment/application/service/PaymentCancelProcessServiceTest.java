@@ -128,6 +128,25 @@ class PaymentCancelProcessServiceTest {
     }
 
     @Test
+    void 받을_수_없는_취소는_결제사에_요청하지_않고_실패로_처리해_취소_실패_이벤트를_발행한다() {
+        // given
+        Payment payment = saveSucceededPayment();
+        CancelPaymentRequestDto overAmount = CancelPaymentRequestDto.builder()
+                .cancellationId(CANCELLATION_ID)
+                .amount(10001)
+                .reason("test")
+                .build();
+
+        // when
+        paymentCancelProcessService.cancelPayment(ORDER_ID, overAmount);
+
+        // then
+        assertThat(cancellation(payment).getStatus()).isEqualTo(CancellationStatus.FAILED);
+        assertThat(eventPublisher.getCancelFailed()).containsExactly(CANCELLATION_ID);
+        assertThat(portOneApi.getCancelPaymentCount()).isZero();
+    }
+
+    @Test
     void 같은_취소_요청이_다시_오면_결제사에_다시_요청하지_않는다() {
         // given
         saveSucceededPayment();

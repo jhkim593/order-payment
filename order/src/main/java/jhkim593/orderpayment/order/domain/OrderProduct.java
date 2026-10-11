@@ -1,6 +1,8 @@
 package jhkim593.orderpayment.order.domain;
 
 import jakarta.persistence.*;
+import jhkim593.orderpayment.order.domain.error.ErrorCode;
+import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -43,5 +45,19 @@ public class OrderProduct {
                 .quantity(quantity)
                 .price(price)
                 .build();
+    }
+
+    void checkCancellable(int cancelQuantity) {
+        if (cancelQuantity <= 0) {
+            throw new OrderException(ErrorCode.INVALID_CANCEL_QUANTITY);
+        }
+        if (cancelQuantity > quantity) {
+            throw new OrderException(ErrorCode.CANCEL_QUANTITY_EXCEEDED);
+        }
+    }
+
+    void cancel(int cancelQuantity) {
+        checkCancellable(cancelQuantity);
+        this.quantity -= cancelQuantity;
     }
 }

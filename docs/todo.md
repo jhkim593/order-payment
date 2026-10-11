@@ -120,12 +120,14 @@
 
 ### 5-3. `order`
 
-- [ ] `order_cancellation`, `order_cancellation_product` 테이블
-- [ ] `order_product.cancelled_quantity` 누적 컬럼
-- [ ] `orders.status`에서 취소 관련 값 제거
-- [ ] 가드 — 미확정 취소 1건 제한, 수량 초과 시 요청 전체 거절
-- [ ] 결과 수신 시 해당 취소 건만 확정, 실패면 수량 되돌림 (미확정이면 되돌리지 않음)
-- [ ] 취소 성공 시 그 취소 건의 수량만큼 재고 복원 (4번에서 넘어옴)
+- [x] `order_cancellation`, `order_product_cancellation` 테이블, 처리 중 취소 1건 부분 유니크 인덱스 (V3)
+- [x] 누적 컬럼 대신 `order_product.quantity`를 남은 수량으로 — 취소 성공 시에만 차감 (ADR 0001)
+- [x] `orders.status`에서 취소 관련 값 제거
+- [x] 가드 — 처리 중 취소 1건 제한, 수량 초과 시 요청 전체 거절
+- [x] 결과 수신 시 해당 취소 건만 확정. 실패는 상태만 `FAILED`
+- [x] 취소 성공 시 그 취소 건의 수량만큼 재고 복원 (4번에서 넘어옴)
+- [x] 취소 요청은 `orderProductId`로, 주문 생성 응답에 주문 상품 목록 추가
+- [x] payment — 결제사 호출 전 가드에 걸린 취소도 `FAILED` 건으로 기록하고 실패 이벤트 발행 (payment ADR 0007)
 
 **완료 조건** — 상품 2개 중 1개만 취소했을 때 금액·수량이 양쪽 모듈에서 맞고, 나머지 1개를 이어서 취소할 수 있음
 

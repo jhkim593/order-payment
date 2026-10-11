@@ -5,6 +5,7 @@ import jhkim593.orderpayment.payment.api.dto.BillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.api.exception.PaymentApiException;
 import jhkim593.orderpayment.order.application.provided.OrderProcessor;
 import jhkim593.orderpayment.order.domain.Order;
+import jhkim593.orderpayment.order.domain.OrderCancellation;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderResponseDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
@@ -31,20 +32,19 @@ public class OrderProcessService implements OrderProcessor {
     }
 
     @Override
-    public void cancelSucceededOrder(Long orderId) {
-        orderTransactionManager.cancelSucceeded(orderId);
+    public void cancelSucceededOrder(Long orderId, Long cancellationId) {
+        orderTransactionManager.cancelSucceeded(orderId, cancellationId);
     }
 
     @Override
-    public void cancelFailedOrder(Long orderId) {
-        orderTransactionManager.cancelFailed(orderId);
+    public void cancelFailedOrder(Long orderId, Long cancellationId) {
+        orderTransactionManager.cancelFailed(orderId, cancellationId);
     }
 
     @Override
     public CancelOrderResponseDto cancelOrder(Long orderId, CancelOrderRequestDto request) {
-        String reason = request.getReason() != null ? request.getReason() : "";
-        Order order = orderTransactionManager.canceling(orderId, reason);
-        return CancelOrderResponseDto.create(order);
+        OrderCancellation cancellation = orderTransactionManager.canceling(orderId, request);
+        return CancelOrderResponseDto.create(orderId, cancellation);
     }
 
     private void executePayment(OrderProcessRequestDto request, Order order) {

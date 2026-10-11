@@ -1,6 +1,7 @@
 package jhkim593.orderpayment.order.domain;
 
 import jakarta.persistence.*;
+import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.*;
@@ -36,6 +37,10 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderProduct> orderProducts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<OrderCancellation> cancellations = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalDateTime statusUpdatedAt;
@@ -83,46 +88,54 @@ public class Order {
         this.statusUpdatedAt = LocalDateTime.now();
     }
 
-    public void canceling() {
-        if(!isSuccess()){
+    public OrderCancellation canceling(Long cancellationId, CancelOrderRequestDto request) {
+        if (!isSuccess()) {
             throw new OrderException(ErrorCode.ORDER_NOT_SUCCEEDED);
         }
-        this.status = OrderStatus.CANCELING;
-        this.statusUpdatedAt = LocalDateTime.now();
-    }
-
-    public void cancelSucceeded() {
-        if(isCancelComplete()){
-            throw new OrderException(ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED);
+        if (cancellations.stream().anyMatch(OrderCancellation::isPending)) {
+            throw new OrderException(ErrorCode.CANCEL_IN_PROGRESS);
         }
-        this.status = OrderStatus.CANCEL_SUCCEEDED;
-        this.statusUpdatedAt = LocalDateTime.now();
-    }
-
-    public void cancelFailed() {
-        if(isCancelComplete()){
-            throw  new OrderException(ErrorCode.ORDER_ALREADY_CANCEL_COMPLETED);
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new OrderException(ErrorCode.CANCEL_ITEMS_EMPTY);
         }
-        this.status = OrderStatus.CANCEL_FAILED;
-        this.statusUpdatedAt = LocalDateTime.now();
+        OrderCancellation cancellation = OrderCancellation.create(cancellationId, this, request.getReason());
+        for (CancelOrderRequestDto.CancelItemRequestDto item : request.getItems()) {
+            cancellation.addProduct(orderProduct(item.getOrderProductId()), item.getQuantity());
+        }
+        cancellations.add(cancellation);
+        return cancellation;
     }
 
-    private boolean isCancelComplete() {
-        return OrderStatus.CANCEL_SUCCEEDED.equals(status)
-                || OrderStatus.CANCEL_FAILED.equals(status);
+    public OrderCancellation cancelSucceeded(Long cancellationId) {
+        OrderCancellation cancellation = cancellation(cancellationId);
+        cancellation.succeeded();
+        return cancellation;
+    }
+
+    public void cancelFailed(Long cancellationId) {
+        cancellation(cancellationId).failed();
+    }
+
+    private OrderProduct orderProduct(Long orderProductId) {
+        return orderProducts.stream()
+                .filter(op -> op.getOrderProductId().equals(orderProductId))
+                .findFirst()
+                .orElseThrow(() -> new OrderException(ErrorCode.ORDER_PRODUCT_NOT_FOUND));
+    }
+
+    private OrderCancellation cancellation(Long cancellationId) {
+        return cancellations.stream()
+                .filter(c -> c.getCancellationId().equals(cancellationId))
+                .findFirst()
+                .orElseThrow(() -> new OrderException(ErrorCode.CANCELLATION_NOT_FOUND));
     }
 
     private boolean isComplete() {
         return OrderStatus.SUCCEEDED.equals(status)
-                || OrderStatus.FAILED.equals(status)
-                || OrderStatus.CANCELING.equals(status)
-                || OrderStatus.CANCEL_SUCCEEDED.equals(status);
+                || OrderStatus.FAILED.equals(status);
     }
 
     private boolean isSuccess(){
         return OrderStatus.SUCCEEDED.equals(status);
-    }
-    private boolean isCanceling(){
-        return OrderStatus.CANCELING.equals(status);
     }
 }

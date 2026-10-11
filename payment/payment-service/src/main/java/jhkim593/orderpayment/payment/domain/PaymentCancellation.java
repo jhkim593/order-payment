@@ -72,7 +72,7 @@ public class PaymentCancellation {
         return CancellationStatus.PENDING.equals(status) || CancellationStatus.UNKNOWN.equals(status);
     }
 
-    boolean isFailed() {
+    public boolean isFailed() {
         return CancellationStatus.FAILED.equals(status);
     }
 
