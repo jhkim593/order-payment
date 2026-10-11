@@ -1,6 +1,7 @@
 package jhkim593.orderpayment.payment.fake;
 
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
+import jhkim593.orderpayment.payment.application.required.PortOneQueryApi;
 import jhkim593.orderpayment.payment.domain.dto.PortOneBillingKeyPaymentRequestDto;
 import jhkim593.orderpayment.payment.domain.dto.PortOneBillingKeyPaymentResponseDto;
 import jhkim593.orderpayment.payment.domain.dto.PortOneCancelPaymentRequestDto;
@@ -9,7 +10,7 @@ import jhkim593.orderpayment.payment.domain.dto.PortOneGetPaymentResponseDto;
 
 import java.time.LocalDateTime;
 
-public class FakePortOneApi implements PortOneApi {
+public class FakePortOneApi implements PortOneApi, PortOneQueryApi {
 
     private String paymentStatus = "READY";
     private long cancelledAmount;

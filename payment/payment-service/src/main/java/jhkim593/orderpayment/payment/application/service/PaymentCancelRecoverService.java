@@ -1,6 +1,6 @@
 package jhkim593.orderpayment.payment.application.service;
 
-import jhkim593.orderpayment.payment.application.required.PortOneApi;
+import jhkim593.orderpayment.payment.application.required.PortOneQueryApi;
 import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentCancellation;
 import jhkim593.orderpayment.payment.domain.dto.PortOneGetPaymentResponseDto;
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class PaymentCancelRecoverService {
     private final PaymentCancelTransactionManager paymentCancelTransactionManager;
-    private final PortOneApi portOneApi;
+    private final PortOneQueryApi portOneApi;
     private final Clock clock;
 
     @Scheduled(

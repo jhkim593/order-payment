@@ -1,6 +1,7 @@
 package jhkim593.orderpayment.payment.adapter.client.portone;
 
 import jhkim593.orderpayment.payment.application.required.PortOneApi;
+import jhkim593.orderpayment.payment.application.required.PortOneQueryApi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -28,9 +29,19 @@ public class PortOneClientConfig {
 
     @Bean
     public PortOneApi portOneClient(ObjectMapper objectMapper, RestClient.Builder restClientBuilder) {
-        RestClient restClient = restClientBuilder
+        return createClient(PortOneApi.class, objectMapper, restClientBuilder, Duration.ofSeconds(10), Duration.ofSeconds(60));
+    }
+
+    @Bean
+    public PortOneQueryApi portOneQueryClient(ObjectMapper objectMapper, RestClient.Builder restClientBuilder) {
+        return createClient(PortOneQueryApi.class, objectMapper, restClientBuilder, Duration.ofSeconds(2), Duration.ofSeconds(5));
+    }
+
+    private <T> T createClient(Class<T> type, ObjectMapper objectMapper, RestClient.Builder restClientBuilder,
+                               Duration connectTimeout, Duration readTimeout) {
+        RestClient restClient = restClientBuilder.clone()
                 .baseUrl(url)
-                .requestFactory(clientHttpRequestFactory())
+                .requestFactory(clientHttpRequestFactory(connectTimeout, readTimeout))
                 .defaultHeader("Authorization", "PortOne " + secret)
                 .defaultStatusHandler(HttpStatusCode::isError, new PortOneClientErrorHandler(objectMapper).handler())
                 .build();
@@ -39,15 +50,15 @@ public class PortOneClientConfig {
                 .builderFor(RestClientAdapter.create(restClient))
                 .build();
 
-        return factory.createClient(PortOneApi.class);
+        return factory.createClient(type);
     }
 
-    private ClientHttpRequestFactory clientHttpRequestFactory() {
+    private ClientHttpRequestFactory clientHttpRequestFactory(Duration connectTimeout, Duration readTimeout) {
         HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10))
+                .connectTimeout(connectTimeout)
                 .build();
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
-        factory.setReadTimeout(Duration.ofSeconds(60));
+        factory.setReadTimeout(readTimeout);
         return factory;
     }
 }
