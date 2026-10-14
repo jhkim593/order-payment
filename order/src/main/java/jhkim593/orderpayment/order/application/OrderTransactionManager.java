@@ -8,6 +8,7 @@ import jhkim593.orderpayment.order.application.required.OrderRepository;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.OrderCancellation;
 import jhkim593.orderpayment.order.domain.OrderProduct;
+import jhkim593.orderpayment.order.domain.OrderStatus;
 import jhkim593.orderpayment.order.domain.Product;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
@@ -58,18 +59,20 @@ public class OrderTransactionManager {
 
 
     @Transactional
+    public void paymentRequested(Long orderId) {
+        orderRepository.updateStatus(orderId, OrderStatus.PAYMENT_REQUESTED);
+    }
+
+    @Transactional
     public void succeeded(Long orderId) {
-        Order order = orderRepository.find(orderId);
-        order.succeeded();
-        orderRepository.save(order);
+        orderRepository.updateStatus(orderId, OrderStatus.SUCCEEDED);
     }
 
     @Transactional
     public void failed(Long orderId) {
-        Order order = orderRepository.find(orderId);
-        order.failed();
-        orderRepository.save(order);
-        productUpdater.increaseStock(toQuantities(order));
+        if (orderRepository.updateStatus(orderId, OrderStatus.FAILED)) {
+            productUpdater.increaseStock(toQuantities(orderRepository.find(orderId)));
+        }
     }
 
     @Transactional

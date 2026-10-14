@@ -21,6 +21,9 @@ public class PaymentController {
                 .paymentId(payment.getPaymentId())
                 .paidAt(payment.getPaidAt())
                 .build();
+        if (payment.isPending()) {
+            return ResponseEntity.accepted().body(response);
+        }
         return ResponseEntity.ok(response);
     }
 

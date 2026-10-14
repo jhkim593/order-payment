@@ -32,9 +32,10 @@ public class PaymentProcessService implements PaymentProcessor {
         try {
             response = portOneApiManager.billingKeyPayment(payment.getPaymentId(), clientRequest);
         } catch (PaymentException e) {
-            if (PaymentErrorCode.PG_PAYMENT_FAILED.equals(e.getErrorCode())) {
-                updateFailed(payment, (PortOneApiException) e.getCause());
+            if (PaymentErrorCode.PG_PAYMENT_UNKNOWN.equals(e.getErrorCode())) {
+                return payment;
             }
+            updateFailed(payment, (PortOneApiException) e.getCause());
             throw e;
         }
         payment = updateSucceeded(payment, response.getPayment().getPgTxId(), response.getPayment().getPaidAt());

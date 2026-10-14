@@ -102,7 +102,7 @@ class OrderTest {
 
     private Order createSucceededOrder() {
         Order order = createOrder();
-        order.succeeded();
+        ReflectionTestUtils.setField(order, "status", OrderStatus.SUCCEEDED);
         return order;
     }
 

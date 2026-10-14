@@ -9,6 +9,7 @@ import jhkim593.orderpayment.payment.domain.PaymentStatus;
 import jhkim593.orderpayment.payment.domain.PgProvider;
 import jhkim593.orderpayment.payment.domain.dto.PaymentMethodDetailDto;
 import jhkim593.orderpayment.payment.domain.error.PortOneApiException;
+import jhkim593.orderpayment.payment.fake.FakeInternalEventPublisher;
 import jhkim593.orderpayment.payment.fake.FakePaymentRepository;
 import jhkim593.orderpayment.payment.fake.FakePortOneApi;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,19 +29,31 @@ class PaymentProcessServiceTest {
 
     private FakePaymentRepository paymentRepository;
     private FakePortOneApi portOneApi;
+    private FakeInternalEventPublisher eventPublisher;
     private PaymentProcessService paymentProcessService;
 
     @BeforeEach
     void setUp() {
         paymentRepository = new FakePaymentRepository();
         portOneApi = new FakePortOneApi();
+        eventPublisher = new FakeInternalEventPublisher();
         PaymentTransactionManager paymentTransactionManager =
-                new PaymentTransactionManager(paymentRepository, paymentMethodFinder(), () -> 1L);
+                new PaymentTransactionManager(paymentRepository, paymentMethodFinder(), () -> 1L, eventPublisher);
         paymentProcessService = new PaymentProcessService(paymentTransactionManager, new PortOneApiManager(portOneApi));
     }
 
     @Test
-    void 결제사가_결제를_거절하면_바로_실패로_처리한다() {
+    void 결제가_성공하면_성공_이벤트를_발행한다() {
+        // when
+        Payment payment = paymentProcessService.billingKeyPayment(createRequest());
+
+        // then
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.SUCCEEDED);
+        assertThat(eventPublisher.getSucceeded()).containsExactly(payment.getPaymentId());
+    }
+
+    @Test
+    void 결제사가_결제를_거절하면_바로_실패로_처리해_실패_이벤트를_발행한다() {
         // given
         portOneApi.setRequestFailure(new PortOneApiException(400, "rejected"));
 
@@ -48,31 +61,35 @@ class PaymentProcessServiceTest {
         assertThatThrownBy(() -> paymentProcessService.billingKeyPayment(createRequest()));
 
         // then
-        assertThat(paymentRepository.findByOrderId(ORDER_ID).getStatus()).isEqualTo(PaymentStatus.FAILED);
+        Payment payment = paymentRepository.findByOrderId(ORDER_ID);
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.FAILED);
+        assertThat(eventPublisher.getFailed()).containsExactly(payment.getPaymentId());
     }
 
     @Test
-    void 결제사_오류로_결과를_모르면_결제를_실패로_처리하지_않는다() {
+    void 결제사_오류로_결과를_모르면_결제를_실패로_처리하지_않고_이벤트도_발행하지_않는다() {
         // given
         portOneApi.setRequestFailure(new PortOneApiException(500, "server error"));
 
         // when
-        assertThatThrownBy(() -> paymentProcessService.billingKeyPayment(createRequest()));
+        Payment payment = paymentProcessService.billingKeyPayment(createRequest());
 
         // then
-        assertThat(paymentRepository.findByOrderId(ORDER_ID).getStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(payment.isPending()).isTrue();
+        assertThat(eventPublisher.getSucceeded()).isEmpty();
+        assertThat(eventPublisher.getFailed()).isEmpty();
     }
 
     @Test
-    void 결제사_응답을_받지_못하면_결제를_실패로_처리하지_않는다() {
+    void 결제사_응답을_받지_못하면_결제를_실패로_처리하지_않고_처리_중으로_응답한다() {
         // given
         portOneApi.setRequestFailure(new ResourceAccessException("timeout", new SocketTimeoutException()));
 
         // when
-        assertThatThrownBy(() -> paymentProcessService.billingKeyPayment(createRequest()));
+        Payment payment = paymentProcessService.billingKeyPayment(createRequest());
 
         // then
-        assertThat(paymentRepository.findByOrderId(ORDER_ID).getStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(payment.isPending()).isTrue();
     }
 
     private PaymentMethodFinder paymentMethodFinder() {

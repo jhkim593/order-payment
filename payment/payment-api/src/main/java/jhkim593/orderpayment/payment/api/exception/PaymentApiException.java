@@ -25,8 +25,9 @@ public class PaymentApiException extends RuntimeException {
         return errorResponse != null ? errorResponse.getCode() : "UNKNOWN";
     }
 
-    public boolean isPgPaymentUnknown() {
-        return PaymentErrorCode.PG_PAYMENT_UNKNOWN.getCode().equals(getErrorCode());
+    public boolean isRejected() {
+        return status >= 400 && status < 500
+                && !PaymentErrorCode.PAYMENT_ALREADY_EXISTS.getCode().equals(getErrorCode());
     }
 
     public boolean isNotFound() {

@@ -83,6 +83,21 @@ public class OrderDBRepository implements OrderRepository {
                 .fetch();
     }
 
+    @Override
+    public boolean updateStatus(Long orderId, OrderStatus status) {
+        QOrder order = QOrder.order;
+        LocalDateTime now = LocalDateTime.now();
+
+        long updated = jpaQueryFactory
+                .update(order)
+                .set(order.status, status)
+                .set(order.statusUpdatedAt, now)
+                .set(order.updatedAt, now)
+                .where(order.orderId.eq(orderId), order.status.in(status.updatableFrom()))
+                .execute();
+        return updated == 1;
+    }
+
     private BooleanExpression statusEq(QOrder order, OrderStatus status) {
         return status != null ? order.status.eq(status) : null;
     }

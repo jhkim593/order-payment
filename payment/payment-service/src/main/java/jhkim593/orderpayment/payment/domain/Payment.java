@@ -144,6 +144,10 @@ public class Payment {
         return this.amount - cancelledAmount() + cancellation(cancellationId).getAmount();
     }
 
+    public boolean isPending() {
+        return PaymentStatus.PENDING.equals(status);
+    }
+
     public boolean isCancelledAmountMatched(long pgCancelledAmount) {
         return pgCancelledAmount == cancelledAmount();
     }

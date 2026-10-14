@@ -5,6 +5,7 @@ import jhkim593.orderpayment.payment.domain.Payment;
 import jhkim593.orderpayment.payment.domain.PaymentMethod;
 import jhkim593.orderpayment.payment.domain.PaymentStatus;
 import jhkim593.orderpayment.payment.domain.PgProvider;
+import jhkim593.orderpayment.payment.fake.FakeInternalEventPublisher;
 import jhkim593.orderpayment.payment.fake.FakePaymentRepository;
 import jhkim593.orderpayment.payment.fake.FakePortOneApi;
 import jhkim593.orderpayment.payment.fake.TestClock;
@@ -22,6 +23,7 @@ class PaymentRecoverServiceTest {
     private FakePaymentRepository paymentRepository;
     private FakePortOneApi portOneApi;
     private TestClock clock;
+    private FakeInternalEventPublisher eventPublisher;
     private PaymentRecoverService paymentRecoverService;
 
     @BeforeEach
@@ -29,8 +31,9 @@ class PaymentRecoverServiceTest {
         paymentRepository = new FakePaymentRepository();
         portOneApi = new FakePortOneApi();
         clock = new TestClock();
+        eventPublisher = new FakeInternalEventPublisher();
         PaymentTransactionManager paymentTransactionManager =
-                new PaymentTransactionManager(paymentRepository, null, () -> 1L);
+                new PaymentTransactionManager(paymentRepository, null, () -> 1L, eventPublisher);
         paymentRecoverService = new PaymentRecoverService(paymentTransactionManager, portOneApi, clock);
     }
 
@@ -70,6 +73,22 @@ class PaymentRecoverServiceTest {
 
         // then
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.UNKNOWN);
+        assertThat(eventPublisher.getSucceeded()).isEmpty();
+        assertThat(eventPublisher.getFailed()).isEmpty();
+    }
+
+    @Test
+    void 확인으로_결제가_확정되면_결과_이벤트를_발행한다() {
+        // given
+        Payment payment = savePendingPayment();
+        portOneApi.setPaymentStatus("FAILED");
+
+        // when
+        runPendingRecover(1);
+
+        // then
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.FAILED);
+        assertThat(eventPublisher.getFailed()).containsExactly(PAYMENT_ID);
     }
 
     @Test

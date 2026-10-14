@@ -72,22 +72,6 @@ public class Order {
         this.orderProducts.add(orderProduct);
     }
 
-    public void succeeded() {
-        if(isComplete()){
-            throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
-        }
-        this.status = OrderStatus.SUCCEEDED;
-        this.statusUpdatedAt = LocalDateTime.now();
-    }
-
-    public void failed() {
-        if(isComplete()){
-            throw new OrderException(ErrorCode.ORDER_ALREADY_COMPLETED);
-        }
-        this.status = OrderStatus.FAILED;
-        this.statusUpdatedAt = LocalDateTime.now();
-    }
-
     public OrderCancellation canceling(Long cancellationId, CancelOrderRequestDto request) {
         if (!isSuccess()) {
             throw new OrderException(ErrorCode.ORDER_NOT_SUCCEEDED);
@@ -128,11 +112,6 @@ public class Order {
                 .filter(c -> c.getCancellationId().equals(cancellationId))
                 .findFirst()
                 .orElseThrow(() -> new OrderException(ErrorCode.CANCELLATION_NOT_FOUND));
-    }
-
-    private boolean isComplete() {
-        return OrderStatus.SUCCEEDED.equals(status)
-                || OrderStatus.FAILED.equals(status);
     }
 
     private boolean isSuccess(){

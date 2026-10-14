@@ -5,6 +5,7 @@ import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderResponseDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessResponseDto;
+import jhkim593.orderpayment.order.domain.dto.OrderProcessResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,8 +20,11 @@ public class OrderController {
 
     @PostMapping("/api/v1/orders")
     public ResponseEntity<OrderProcessResponseDto> processOrder (@RequestBody OrderProcessRequestDto request) {
-        OrderProcessResponseDto response = orderProcessor.processOrder(request);
-        return ResponseEntity.ok(response);
+        OrderProcessResult result = orderProcessor.processOrder(request);
+        if (result.isInProgress()) {
+            return ResponseEntity.accepted().body(result.getResponse());
+        }
+        return ResponseEntity.ok(result.getResponse());
     }
 
     @PostMapping("/api/v1/orders/{orderId}/cancel")
