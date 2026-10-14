@@ -36,13 +36,3 @@ CREATE TABLE order_product
     created_at       TIMESTAMP NOT NULL
 );
 
--- Test data
-INSERT INTO product (product_type, name, description, price, created_at, updated_at)
-VALUES ('CREDIT', '크레딧 100', '100 크레딧 상품', 10000, NOW(), NOW()),
-       ('CREDIT', '크레딧 500', '500 크레딧 상품', 45000, NOW(), NOW()),
-       ('CREDIT', '크레딧 1000', '1000 크레딧 상품', 80000, NOW(), NOW());
-
-INSERT INTO credit_product (product_id, credit_amount)
-VALUES (1, 100),
-       (2, 500),
-       (3, 1000);

@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# harness workspace (에이전트 팀 중간 산출물)
+_workspace/
+_workspace_*/
