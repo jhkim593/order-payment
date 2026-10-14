@@ -1,5 +1,6 @@
 package jhkim593.orderpayment.order.application.required;
 
+import jhkim593.orderpayment.order.domain.CancellationStatus;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.OrderStatus;
 
@@ -11,4 +12,5 @@ public interface OrderRepository {
     Order findByUserId(Long userId);
     List<Order> findPendingOrders(int second);
     boolean updateStatus(Long orderId, OrderStatus status);
+    boolean updateCancellationStatus(Long cancellationId, CancellationStatus status);
 }

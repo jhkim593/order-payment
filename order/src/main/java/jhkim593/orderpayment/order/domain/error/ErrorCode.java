@@ -8,7 +8,6 @@ public enum ErrorCode {
     PRODUCT_OUT_OF_STOCK("P002", 409, "product out of stock", false),
     ORDER_NOT_FOUND("O001", 404, "order not found", false),
     DUPLICATE_ORDER_PRODUCT("O006", 400, "duplicate product in order", false),
-    CANCELLATION_NOT_PENDING("O003", 400, "cancellation not pending", false),
     ORDER_NOT_SUCCEEDED("O004", 400, "order not succeeded", false),
     CANCEL_IN_PROGRESS("O007", 409, "another cancellation is in progress", false),
     CANCEL_QUANTITY_EXCEEDED("O008", 400, "cancel quantity exceeds remaining quantity", false),

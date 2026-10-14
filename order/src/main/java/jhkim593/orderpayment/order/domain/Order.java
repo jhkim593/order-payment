@@ -96,10 +96,6 @@ public class Order {
         return cancellation;
     }
 
-    public void cancelFailed(Long cancellationId) {
-        cancellation(cancellationId).failed();
-    }
-
     private OrderProduct orderProduct(Long orderProductId) {
         return orderProducts.stream()
                 .filter(op -> op.getOrderProductId().equals(orderProductId))

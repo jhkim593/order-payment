@@ -5,6 +5,7 @@ import jhkim593.orderpayment.order.application.event.InternalEventPublisher;
 import jhkim593.orderpayment.order.application.provided.ProductQuantity;
 import jhkim593.orderpayment.order.application.provided.ProductUpdater;
 import jhkim593.orderpayment.order.application.required.OrderRepository;
+import jhkim593.orderpayment.order.domain.CancellationStatus;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.OrderCancellation;
 import jhkim593.orderpayment.order.domain.OrderProduct;
@@ -86,6 +87,9 @@ public class OrderTransactionManager {
 
     @Transactional
     public void cancelSucceeded(Long orderId, Long cancellationId) {
+        if (!orderRepository.updateCancellationStatus(cancellationId, CancellationStatus.SUCCEEDED)) {
+            return;
+        }
         Order order = orderRepository.find(orderId);
         OrderCancellation cancellation = order.cancelSucceeded(cancellationId);
         orderRepository.save(order);
@@ -96,9 +100,7 @@ public class OrderTransactionManager {
 
     @Transactional
     public void cancelFailed(Long orderId, Long cancellationId) {
-        Order order = orderRepository.find(orderId);
-        order.cancelFailed(cancellationId);
-        orderRepository.save(order);
+        orderRepository.updateCancellationStatus(cancellationId, CancellationStatus.FAILED);
     }
 
     private List<ProductQuantity> toQuantities(Order order) {

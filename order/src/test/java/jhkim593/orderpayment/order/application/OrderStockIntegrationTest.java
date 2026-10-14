@@ -1,5 +1,6 @@
 package jhkim593.orderpayment.order.application;
 
+import jhkim593.orderpayment.order.domain.CancellationStatus;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.OrderCancellation;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
@@ -23,7 +24,12 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -121,6 +127,63 @@ class OrderStockIntegrationTest {
         orderTransactionManager.cancelFailed(order.getOrderId(), cancellation.getCancellationId());
 
         assertThat(stockOf(productId)).isEqualTo(7);
+    }
+
+    @Test
+    void 환불이_성공하면_취소가_확정되고_남은_수량만큼만_이어서_취소할_수_있다() {
+        Long productId = createProduct(10);
+        Order order = orderTransactionManager.createOrder(request(item(productId, 3)));
+        orderTransactionManager.succeeded(order.getOrderId());
+        OrderCancellation cancellation = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 1));
+
+        orderTransactionManager.cancelSucceeded(order.getOrderId(), cancellation.getCancellationId());
+
+        assertThatThrownBy(() -> orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 3)))
+                .isInstanceOf(OrderException.class)
+                .extracting(e -> ((OrderException) e).getErrorCode())
+                .isEqualTo(ErrorCode.CANCEL_QUANTITY_EXCEEDED);
+        OrderCancellation rest = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 2));
+        assertThat(rest.getStatus()).isEqualTo(CancellationStatus.PENDING);
+    }
+
+    @Test
+    void 환불이_실패하면_그_상품들을_다시_취소할_수_있다() {
+        Long productId = createProduct(10);
+        Order order = orderTransactionManager.createOrder(request(item(productId, 3)));
+        orderTransactionManager.succeeded(order.getOrderId());
+        OrderCancellation cancellation = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 3));
+
+        orderTransactionManager.cancelFailed(order.getOrderId(), cancellation.getCancellationId());
+
+        OrderCancellation retry = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 3));
+        assertThat(retry.getStatus()).isEqualTo(CancellationStatus.PENDING);
+    }
+
+    @Test
+    void 같은_취소_결과가_동시에_여러_번_와도_재고는_한_번만_되돌린다() throws Exception {
+        Long productId = createProduct(10);
+        Order order = orderTransactionManager.createOrder(request(item(productId, 3)));   // 10 → 7
+        orderTransactionManager.succeeded(order.getOrderId());
+        OrderCancellation cancellation = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 1));
+
+        int threads = 5;
+        CountDownLatch start = new CountDownLatch(1);
+        try (ExecutorService executor = Executors.newFixedThreadPool(threads)) {
+            List<Future<?>> futures = new ArrayList<>();
+            for (int i = 0; i < threads; i++) {
+                futures.add(executor.submit(() -> {
+                    start.await();
+                    orderTransactionManager.cancelSucceeded(order.getOrderId(), cancellation.getCancellationId());
+                    return null;
+                }));
+            }
+            start.countDown();
+            for (Future<?> future : futures) {
+                future.get();
+            }
+        }
+
+        assertThat(stockOf(productId)).isEqualTo(8);
     }
 
     @Test

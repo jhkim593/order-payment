@@ -71,35 +71,6 @@ class OrderTest {
         assertErrorCode(() -> order.canceling(101L, request(item(B, 1))), ErrorCode.CANCEL_IN_PROGRESS);
     }
 
-    @Test
-    void 환불이_성공하면_취소가_확정되고_남은_수량만큼만_이어서_취소할_수_있다() {
-        // given
-        Order order = createSucceededOrder();
-        order.canceling(100L, request(item(A, 1)));
-
-        // when
-        order.cancelSucceeded(100L);
-
-        // then
-        assertErrorCode(() -> order.canceling(101L, request(item(A, 3))), ErrorCode.CANCEL_QUANTITY_EXCEEDED);
-        OrderCancellation rest = order.canceling(102L, request(item(A, 2)));
-        assertThat(rest.getStatus()).isEqualTo(CancellationStatus.PENDING);
-    }
-
-    @Test
-    void 환불이_실패하면_그_상품들을_다시_취소할_수_있다() {
-        // given
-        Order order = createSucceededOrder();
-        order.canceling(100L, request(item(A, 3)));
-
-        // when
-        order.cancelFailed(100L);
-
-        // then
-        OrderCancellation retry = order.canceling(101L, request(item(A, 3)));
-        assertThat(retry.getStatus()).isEqualTo(CancellationStatus.PENDING);
-    }
-
     private Order createSucceededOrder() {
         Order order = createOrder();
         ReflectionTestUtils.setField(order, "status", OrderStatus.SUCCEEDED);

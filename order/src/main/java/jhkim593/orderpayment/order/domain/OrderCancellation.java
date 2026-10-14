@@ -76,19 +76,6 @@ public class OrderCancellation {
     }
 
     void succeeded() {
-        changeStatus(CancellationStatus.SUCCEEDED);
         products.forEach(p -> p.getOrderProduct().cancel(p.getQuantity()));
-    }
-
-    void failed() {
-        changeStatus(CancellationStatus.FAILED);
-    }
-
-    private void changeStatus(CancellationStatus next) {
-        if (!isPending()) {
-            throw new OrderException(ErrorCode.CANCELLATION_NOT_PENDING);
-        }
-        this.status = next;
-        this.statusUpdatedAt = LocalDateTime.now();
     }
 }
