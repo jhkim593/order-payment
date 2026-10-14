@@ -4,9 +4,11 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jhkim593.orderpayment.order.adapter.database.jpa.OrderJpaRepository;
 import jhkim593.orderpayment.order.application.required.OrderRepository;
+import jhkim593.orderpayment.order.domain.CancellationStatus;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.OrderStatus;
 import jhkim593.orderpayment.order.domain.QOrder;
+import jhkim593.orderpayment.order.domain.QOrderCancellation;
 import jhkim593.orderpayment.order.domain.QOrderProduct;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
@@ -94,6 +96,21 @@ public class OrderDBRepository implements OrderRepository {
                 .set(order.statusUpdatedAt, now)
                 .set(order.updatedAt, now)
                 .where(order.orderId.eq(orderId), order.status.in(status.updatableFrom()))
+                .execute();
+        return updated == 1;
+    }
+
+    @Override
+    public boolean updateCancellationStatus(Long cancellationId, CancellationStatus status) {
+        QOrderCancellation cancellation = QOrderCancellation.orderCancellation;
+        LocalDateTime now = LocalDateTime.now();
+
+        long updated = jpaQueryFactory
+                .update(cancellation)
+                .set(cancellation.status, status)
+                .set(cancellation.statusUpdatedAt, now)
+                .set(cancellation.updatedAt, now)
+                .where(cancellation.cancellationId.eq(cancellationId), cancellation.status.in(status.updatableFrom()))
                 .execute();
         return updated == 1;
     }
