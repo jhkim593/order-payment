@@ -42,7 +42,7 @@ class OrderStockIntegrationTest {
 
     @Container
     @ServiceConnection
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:15-alpine");
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
 
     // 복구 스케줄러가 테스트 주문을 건드리지 않도록 막는다
     @MockitoBean

@@ -522,6 +522,40 @@
           "expr": "topk(10, sum by (datname, query) (rate(pg_stat_statements_calls_total{datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"}))"
         }
       ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "쿼리별 평균 실행시간 Top 10",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "max"]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "[{{datname}}] {{queryid}} {{query}}",
+          "expr": "topk(10, (sum by (instance, datname, queryid) (rate(pg_stat_statements_seconds_total{datname=~\"order|payment\"}[$__rate_interval])) / (sum by (instance, datname, queryid) (rate(pg_stat_statements_calls_total{datname=~\"order|payment\"}[$__rate_interval])) > 0)) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"})"
+        }
+      ]
     }
   ],
   "description": "주문·취소 요청이 결제 완료까지 정상 처리되고 있는가",

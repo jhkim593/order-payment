@@ -29,7 +29,7 @@ class PaymentDBRepositoryTest {
 
     @Container
     @ServiceConnection
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:15-alpine");
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
 
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 6, 12, 0, 0);
 

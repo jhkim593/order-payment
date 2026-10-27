@@ -7,7 +7,7 @@ x-app-env: &app-env
 services:
   # PostgreSQL for Order Service
   order-db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: order-db
     command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
     environment:
@@ -28,7 +28,7 @@ services:
 
   # PostgreSQL for Payment Service
   payment-db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: payment-db
     command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
     environment:
@@ -49,7 +49,7 @@ services:
 
   # PostgreSQL for User Service
   user-db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: user-db
     environment:
       POSTGRES_DB: user
@@ -179,7 +179,7 @@ services:
     networks:
       - order-payment-network
 
-  order-service:
+  1vice:
     build:
       context: .
       args:

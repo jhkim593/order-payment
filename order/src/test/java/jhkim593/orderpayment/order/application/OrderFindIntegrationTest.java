@@ -36,7 +36,7 @@ class OrderFindIntegrationTest {
 
     @Container
     @ServiceConnection
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:15-alpine");
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
 
     private static final AtomicLong USER_ID = new AtomicLong(1000);
 
