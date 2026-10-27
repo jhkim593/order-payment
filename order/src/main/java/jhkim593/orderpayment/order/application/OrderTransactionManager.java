@@ -5,6 +5,7 @@ import jhkim593.orderpayment.order.application.event.InternalEventPublisher;
 import jhkim593.orderpayment.order.application.provided.ProductQuantity;
 import jhkim593.orderpayment.order.application.provided.ProductUpdater;
 import jhkim593.orderpayment.order.application.required.OrderRepository;
+import jhkim593.orderpayment.order.application.required.ProductRepository;
 import jhkim593.orderpayment.order.domain.CancellationStatus;
 import jhkim593.orderpayment.order.domain.Order;
 import jhkim593.orderpayment.order.domain.OrderCancellation;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderTransactionManager {
     private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
     private final ProductUpdater productUpdater;
     private final InternalEventPublisher eventPublisher;
     private final IdGenerator idGenerator;
@@ -36,7 +38,7 @@ public class OrderTransactionManager {
                 .map(item -> new ProductQuantity(item.getProductId(), item.getQuantity()))
                 .toList();
 
-        Map<Long, Product> productMap = productUpdater.decreaseStock(quantities).stream()
+        Map<Long, Product> productMap = productRepository.findAll(quantities.stream().map(ProductQuantity::productId).toList()).stream()
                 .collect(Collectors.toMap(Product::getProductId, Function.identity()));
 
         int totalAmount = request.getItems().stream()
@@ -55,7 +57,9 @@ public class OrderTransactionManager {
             );
             order.addOrderProduct(orderProduct);
         }
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        productUpdater.decreaseStock(quantities);
+        return saved;
     }
 
 

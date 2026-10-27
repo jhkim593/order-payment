@@ -1,8 +1,6 @@
 package jhkim593.orderpayment.order.domain;
 
 import jakarta.persistence.*;
-import jhkim593.orderpayment.order.domain.error.ErrorCode;
-import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -48,16 +46,5 @@ public class Product {
                 .price(price)
                 .stock(stock)
                 .build();
-    }
-
-    public void decreaseStock(int quantity) {
-        if (stock < quantity) {
-            throw new OrderException(ErrorCode.PRODUCT_OUT_OF_STOCK);
-        }
-        this.stock -= quantity;
-    }
-
-    public void increaseStock(int quantity) {
-        this.stock += quantity;
     }
 }

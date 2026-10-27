@@ -84,6 +84,36 @@ class OrderStockIntegrationTest {
     }
 
     @Test
+    void 같은_상품에_동시에_주문이_몰려도_재고보다_많이_팔지_않는다() throws Exception {
+        Long productId = createProduct(5);
+
+        int threads = 20;
+        CountDownLatch start = new CountDownLatch(1);
+        int succeeded = 0;
+        try (ExecutorService executor = Executors.newFixedThreadPool(threads)) {
+            List<Future<Boolean>> futures = new ArrayList<>();
+            for (int i = 0; i < threads; i++) {
+                futures.add(executor.submit(() -> {
+                    start.await();
+                    try {
+                        orderTransactionManager.createOrder(request(item(productId, 1)));
+                        return true;
+                    } catch (OrderException e) {
+                        return false;
+                    }
+                }));
+            }
+            start.countDown();
+            for (Future<Boolean> future : futures) {
+                if (future.get()) succeeded++;
+            }
+        }
+
+        assertThat(succeeded).isEqualTo(5);
+        assertThat(stockOf(productId)).isEqualTo(0);
+    }
+
+    @Test
     void 주문_요청에_같은_상품이_두_번_있으면_거절하고_재고는_그대로다() {
         Long productId = createProduct(10);
 

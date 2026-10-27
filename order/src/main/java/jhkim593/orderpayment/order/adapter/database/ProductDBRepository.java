@@ -1,6 +1,5 @@
 package jhkim593.orderpayment.order.adapter.database;
 
-import jakarta.persistence.EntityManager;
 import jhkim593.orderpayment.order.adapter.database.jpa.ProductJpaRepository;
 import jhkim593.orderpayment.order.application.required.ProductRepository;
 import jhkim593.orderpayment.order.domain.Product;
@@ -15,7 +14,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductDBRepository implements ProductRepository {
     private final ProductJpaRepository productJpaRepository;
-    private final EntityManager entityManager;
 
     @Override
     public Product find(Long id) {
@@ -23,10 +21,22 @@ public class ProductDBRepository implements ProductRepository {
     }
 
     @Override
-    public List<Product> findAllForUpdate(List<Long> ids) {
-        List<Product> products = productJpaRepository.findAllForUpdate(ids);
-        // 이미 영속성 컨텍스트에 있던 상품은 락 조회로 값이 갱신되지 않아, 락을 잡은 뒤 최신 값으로 다시 읽는다
-        products.forEach(entityManager::refresh);
+    public List<Product> findAll(List<Long> ids) {
+        List<Long> distinctIds = ids.stream().distinct().toList();
+        List<Product> products = productJpaRepository.findAllById(distinctIds);
+        if (products.size() != distinctIds.size()) {
+            throw new OrderException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
         return products;
+    }
+
+    @Override
+    public boolean decreaseStock(Long id, int quantity) {
+        return productJpaRepository.decreaseStock(id, quantity) == 1;
+    }
+
+    @Override
+    public void increaseStock(Long id, int quantity) {
+        productJpaRepository.increaseStock(id, quantity);
     }
 }

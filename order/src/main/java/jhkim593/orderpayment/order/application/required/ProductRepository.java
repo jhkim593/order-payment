@@ -6,5 +6,7 @@ import java.util.List;
 
 public interface ProductRepository {
     Product find(Long id);
-    List<Product> findAllForUpdate(List<Long> ids);
+    List<Product> findAll(List<Long> ids);
+    boolean decreaseStock(Long id, int quantity);
+    void increaseStock(Long id, int quantity);
 }
