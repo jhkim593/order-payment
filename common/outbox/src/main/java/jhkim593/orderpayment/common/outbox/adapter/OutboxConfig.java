@@ -1,5 +1,7 @@
 package jhkim593.orderpayment.common.outbox.adapter;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import jhkim593.orderpayment.common.observability.EventTypeTemplateObservationConvention;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.MicrometerProducerListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -38,15 +41,18 @@ public class OutboxConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public KafkaTemplate<String, String> outboxKafkaTemplate() {
+    public KafkaTemplate<String, String> outboxKafkaTemplate(MeterRegistry meterRegistry) {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.ACKS_CONFIG, "all");
-        KafkaTemplate<String, String> kafkaTemplate = new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(configProps));
+        DefaultKafkaProducerFactory<String, String> producerFactory = new DefaultKafkaProducerFactory<>(configProps);
+        producerFactory.addListener(new MicrometerProducerListener<>(meterRegistry));
+        KafkaTemplate<String, String> kafkaTemplate = new KafkaTemplate<>(producerFactory);
         //otel observation
         kafkaTemplate.setObservationEnabled(true);
+        kafkaTemplate.setObservationConvention(new EventTypeTemplateObservationConvention());
         return kafkaTemplate;
     }
 

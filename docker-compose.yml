@@ -9,6 +9,7 @@ services:
   order-db:
     image: postgres:15-alpine
     container_name: order-db
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
     environment:
       POSTGRES_DB: order
       POSTGRES_USER: root
@@ -29,6 +30,7 @@ services:
   payment-db:
     image: postgres:15-alpine
     container_name: payment-db
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
     environment:
       POSTGRES_DB: payment
       POSTGRES_USER: root
@@ -109,6 +111,40 @@ services:
     networks:
       - order-payment-network
 
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.9.0
+    container_name: kafka-exporter
+    command: ["--kafka.server=kafka:9093"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - order-payment-network
+
+  order-db-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.19.1
+    container_name: order-db-exporter
+    command: ["--collector.stat_statements", "--collector.stat_statements.include_query"]
+    environment:
+      DATA_SOURCE_NAME: postgresql://root:a1234567!@order-db:5432/order?sslmode=disable
+    depends_on:
+      order-db:
+        condition: service_healthy
+    networks:
+      - order-payment-network
+
+  payment-db-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.19.1
+    container_name: payment-db-exporter
+    command: ["--collector.stat_statements", "--collector.stat_statements.include_query"]
+    environment:
+      DATA_SOURCE_NAME: postgresql://root:a1234567!@payment-db:5432/payment?sslmode=disable
+    depends_on:
+      payment-db:
+        condition: service_healthy
+    networks:
+      - order-payment-network
+
   otel-lgtm:
     image: grafana/otel-lgtm
     ports:
@@ -117,6 +153,10 @@ services:
       - "4317:4317"   # OTLP gRPC receiver
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./monitoring/grafana/provisioning/dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/order-payment.yaml
+      - ./monitoring/grafana/dashboards:/otel-lgtm/order-payment-dashboards
+      - ./monitoring/prometheus/prometheus.yaml:/otel-lgtm/prometheus.yaml
     networks:
       - order-payment-network
 

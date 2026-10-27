@@ -1,0 +1,558 @@
+{
+  "uid": "order-flow",
+  "title": "주문·결제 흐름",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "API (선택한 서비스)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "API 초당 요청",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} {{method}} {{uri}}",
+          "expr": "sum by (job, method, uri) (rate(http_server_requests_milliseconds_count{job=~\"$service\", uri!~\"/actuator.*|/[*][*]\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "API 5xx 에러율",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "links": [
+            {
+              "title": "이 시간대 에러 trace 보기 (Tempo)",
+              "targetBlank": true,
+              "url": "/explore?schemaVersion=1&orgId=1&panes=%7B%22a%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B%20resource.service.name%20%3D~%20%5C%22${service:pipe}%5C%22%20%26%26%20status%20%3D%20error%20%7D%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D"
+            }
+          ],
+          "max": 1
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} {{method}} {{uri}}",
+          "expr": "sum by (job, method, uri) (rate(http_server_requests_milliseconds_count{job=~\"$service\", uri!~\"/actuator.*|/[*][*]\", status=~\"5..\"}[$__rate_interval])) / sum by (job, method, uri) (rate(http_server_requests_milliseconds_count{job=~\"$service\", uri!~\"/actuator.*|/[*][*]\"}[$__rate_interval])) or sum by (job, method, uri) (rate(http_server_requests_milliseconds_count{job=~\"$service\", uri!~\"/actuator.*|/[*][*]\"}[$__rate_interval])) * 0"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "API p99 응답시간",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} {{method}} {{uri}}",
+          "expr": "histogram_quantile(0.99, sum by (job, method, uri, le) (rate(http_server_requests_milliseconds_bucket{job=~\"$service\", uri!~\"/actuator.*|/[*][*]\"}[$__rate_interval])))",
+          "exemplar": true
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "동기 호출 (호출하는 쪽에서 잰 값)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "호출 에러율 (order→payment, payment→PG)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "links": [
+            {
+              "title": "이 시간대 에러 trace 보기 (Tempo)",
+              "targetBlank": true,
+              "url": "/explore?schemaVersion=1&orgId=1&panes=%7B%22a%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B%20kind%20%3D%20client%20%26%26%20status%20%3D%20error%20%7D%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D"
+            }
+          ],
+          "max": 1
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} → {{client_name}}",
+          "expr": "sum by (job, client_name) (rate(http_client_requests_milliseconds_count{job=~\"$service\", outcome!=\"SUCCESS\"}[$__rate_interval])) / sum by (job, client_name) (rate(http_client_requests_milliseconds_count{job=~\"$service\"}[$__rate_interval])) or sum by (job, client_name) (rate(http_client_requests_milliseconds_count{job=~\"$service\"}[$__rate_interval])) * 0"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "호출 p99 응답시간 (order→payment, payment→PG)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} → {{client_name}}",
+          "expr": "histogram_quantile(0.99, sum by (job, client_name, le) (rate(http_client_requests_milliseconds_bucket{job=~\"$service\"}[$__rate_interval])))",
+          "exemplar": true
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "비동기 처리 (Kafka 컨슈머)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "초당 처리",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 19
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} (토픽: {{messaging_source_name}}, {{event_type}})",
+          "expr": "sum by (job, messaging_source_name, event_type) (rate(spring_kafka_listener_milliseconds_count{job=~\"$service\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "처리 에러율",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 19
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "links": [
+            {
+              "title": "이 시간대 에러 trace 보기 (Tempo)",
+              "targetBlank": true,
+              "url": "/explore?schemaVersion=1&orgId=1&panes=%7B%22a%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B%20kind%20%3D%20consumer%20%26%26%20status%20%3D%20error%20%7D%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D"
+            }
+          ],
+          "max": 1
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} (토픽: {{messaging_source_name}}, {{event_type}})",
+          "expr": "sum by (job, messaging_source_name, event_type) (rate(spring_kafka_listener_milliseconds_count{job=~\"$service\", error!=\"none\"}[$__rate_interval])) / sum by (job, messaging_source_name, event_type) (rate(spring_kafka_listener_milliseconds_count{job=~\"$service\"}[$__rate_interval])) or sum by (job, messaging_source_name, event_type) (rate(spring_kafka_listener_milliseconds_count{job=~\"$service\"}[$__rate_interval])) * 0"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "평균 처리시간",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 19
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} (토픽: {{messaging_source_name}}, {{event_type}})",
+          "expr": "sum by (job, messaging_source_name, event_type) (rate(spring_kafka_listener_milliseconds_sum{job=~\"$service\"}[$__rate_interval])) / sum by (job, messaging_source_name, event_type) (rate(spring_kafka_listener_milliseconds_count{job=~\"$service\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "DLT 유입 (재시도 끝에 실패한 메시지)",
+      "description": "0이 아니면 사람이 확인해야 한다",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80
+          }
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{topic}}",
+          "expr": "sum by (topic) (increase(kafka_topic_partition_current_offset{topic=~\".*-dlt\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "type": "row",
+      "title": "DB",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "커넥션 풀 사용량",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 34
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} 사용 중",
+          "expr": "sum by (job) (hikaricp_connections_active{job=~\"$service\"})"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{job}} 대기",
+          "expr": "sum by (job) (hikaricp_connections_pending{job=~\"$service\"})"
+        },
+        {
+          "refId": "C",
+          "legendFormat": "{{job}} 최대",
+          "expr": "sum by (job) (hikaricp_connections_max{job=~\"$service\"})"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "커넥션 획득 p99",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 34
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}}",
+          "expr": "histogram_quantile(0.99, sum by (job, le) (rate(hikaricp_connections_acquire_milliseconds_bucket{job=~\"$service\"}[$__rate_interval])))"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "커넥션 점유 p99",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 34
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}}",
+          "expr": "histogram_quantile(0.99, sum by (job, le) (rate(hikaricp_connections_usage_milliseconds_bucket{job=~\"$service\"}[$__rate_interval])))"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "DB TPS (커밋·롤백)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 42
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{datname}} 커밋",
+          "expr": "sum by (datname) (rate(pg_stat_database_xact_commit{datname=~\"order|payment\"}[$__rate_interval]))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{datname}} 롤백",
+          "expr": "sum by (datname) (rate(pg_stat_database_xact_rollback{datname=~\"order|payment\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "쿼리 종류별 QPS",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 42
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{datname}} {{type}}",
+          "expr": "sum by (datname, type) (label_replace(rate(pg_stat_statements_calls_total{datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query=~\"(?is)[[:space:]]*(select|insert|update|delete)[[:space:]].*\", query!~\"(?is).*pg_.*\"}, \"type\", \"$1\", \"query\", \"(?is)[[:space:]]*(select|insert|update|delete)[[:space:]].*\"))"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "쿼리별 호출 Top 10",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 50
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "max"]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "[{{datname}}] {{query}}",
+          "expr": "topk(10, sum by (datname, query) (rate(pg_stat_statements_calls_total{datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"}))"
+        }
+      ]
+    }
+  ],
+  "description": "주문·취소 요청이 결제 완료까지 정상 처리되고 있는가",
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "label": "서비스",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "qryType": 1,
+          "query": "label_values(http_server_requests_milliseconds_count, job)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "definition": "label_values(http_server_requests_milliseconds_count, job)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      }
+    ]
+  }
+}

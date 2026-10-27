@@ -19,6 +19,8 @@ public enum EventType {
     PAYMENT_CANCEL_FAILED(PaymentCancelFailedEventPayload.class, Topic.PAYMENT),
     ORDER_CANCEL(OrderCancelEventPayload.class, Topic.ORDER);
 
+    public static final String HEADER = "event-type";
+
     private final Class<? extends EventPayload> payloadClass;
     private final String topic;
 
