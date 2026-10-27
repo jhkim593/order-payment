@@ -11,6 +11,7 @@ public interface OrderRepository {
     Order find(Long id);
     Order findByUserId(Long userId);
     List<Order> findPendingOrders(int second);
+    List<Order> findOrders(Long userId, Long cursor, int limit);
     boolean updateStatus(Long orderId, OrderStatus status);
     boolean updateCancellationStatus(Long cancellationId, CancellationStatus status);
 }

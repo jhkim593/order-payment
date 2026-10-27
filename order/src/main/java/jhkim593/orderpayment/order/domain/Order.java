@@ -96,6 +96,16 @@ public class Order {
         return cancellation;
     }
 
+    public int cancelledQuantity(OrderProduct orderProduct) {
+            return cancellations.stream()
+                .mapToInt(c -> c.cancelledQuantity(orderProduct))
+                .sum();
+    }
+
+    public int orderedQuantity(OrderProduct orderProduct) {
+        return orderProduct.getQuantity() + cancelledQuantity(orderProduct);
+    }
+
     private OrderProduct orderProduct(Long orderProductId) {
         return orderProducts.stream()
                 .filter(op -> op.getOrderProductId().equals(orderProductId))

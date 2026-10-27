@@ -75,6 +75,16 @@ public class OrderCancellation {
         return CancellationStatus.PENDING.equals(status);
     }
 
+    int cancelledQuantity(OrderProduct orderProduct) {
+        if (!CancellationStatus.SUCCEEDED.equals(status)) {
+            return 0;
+        }
+        return products.stream()
+                .filter(p -> p.getOrderProduct().getOrderProductId().equals(orderProduct.getOrderProductId()))
+                .mapToInt(OrderProductCancellation::getQuantity)
+                .sum();
+    }
+
     void succeeded() {
         products.forEach(p -> p.getOrderProduct().cancel(p.getQuantity()));
     }

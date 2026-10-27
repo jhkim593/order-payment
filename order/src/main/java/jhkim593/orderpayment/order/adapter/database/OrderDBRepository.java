@@ -86,6 +86,18 @@ public class OrderDBRepository implements OrderRepository {
     }
 
     @Override
+    public List<Order> findOrders(Long userId, Long cursor, int limit) {
+        QOrder order = QOrder.order;
+
+        return jpaQueryFactory
+                .selectFrom(order)
+                .where(order.userId.eq(userId), cursor != null ? order.orderId.lt(cursor) : null)
+                .orderBy(order.orderId.desc())
+                .limit(limit)
+                .fetch();
+    }
+
+    @Override
     public boolean updateStatus(Long orderId, OrderStatus status) {
         QOrder order = QOrder.order;
         LocalDateTime now = LocalDateTime.now();
