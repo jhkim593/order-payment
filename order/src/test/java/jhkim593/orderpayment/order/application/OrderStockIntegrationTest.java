@@ -231,7 +231,7 @@ class OrderStockIntegrationTest {
         Long productId = createProduct(10);
         Order order = orderTransactionManager.createOrder(request(item(productId, 3)));   // 10 → 7
 
-        // failed()가 주문(상품 포함)을 읽은 뒤, 재고를 잠그기 직전에 다른 트랜잭션이 2개를 차감하고 커밋한다
+        // failed()가 주문(상품 포함)을 읽은 뒤, 재고를 되돌리기 직전에 다른 트랜잭션이 2개를 차감하고 커밋한다
         doAnswer(invocation -> {
             TransactionTemplate other = new TransactionTemplate(transactionManager);
             other.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
