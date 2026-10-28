@@ -180,7 +180,7 @@ services:
     networks:
       - order-payment-network
 
-  1vice:
+  order-service:
     build:
       context: .
       args:
@@ -199,6 +199,22 @@ services:
         condition: service_healthy
       payment-service:
         condition: service_started
+    networks:
+      - order-payment-network
+
+  traffic:
+    image: grafana/k6:latest
+    container_name: traffic
+    profiles: ["traffic"]
+    restart: unless-stopped
+    command: run --quiet /scripts/traffic.js
+    environment:
+      BASE_URL: http://order-service:8081
+      RATE: ${TRAFFIC_RATE:-1}
+    volumes:
+      - ./loadtest:/scripts
+    depends_on:
+      - order-service
     networks:
       - order-payment-network
 
