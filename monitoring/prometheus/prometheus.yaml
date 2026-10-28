@@ -44,4 +44,7 @@ scrape_configs:
   - job_name: postgres-exporter
     scrape_interval: 15s
     static_configs:
-      - targets: ["order-db-exporter:9187", "payment-db-exporter:9187"]
+      - targets: ["order-db-exporter:9187"]
+        labels: {service: order-service}
+      - targets: ["payment-db-exporter:9187"]
+        labels: {service: payment-service}

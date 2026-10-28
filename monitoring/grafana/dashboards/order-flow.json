@@ -1,6 +1,6 @@
 {
   "uid": "order-flow",
-  "title": "주문·결제 흐름",
+  "title": "주문·결제",
   "refresh": "30s",
   "time": {
     "from": "now-1h",
@@ -9,17 +9,143 @@
   "schemaVersion": 39,
   "panels": [
     {
-      "id": 100,
+      "id": 1000,
       "type": "row",
-      "title": "API (선택한 서비스)",
+      "title": "업무 흐름 (전체 · 서비스 선택과 무관)",
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "주문 요청 (응답 코드별)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{status}}",
+          "expr": "sum by (status) (rate(http_server_requests_milliseconds_count{job=\"order-service\", method=\"POST\", uri=\"/api/v1/orders\"}[$__rate_interval]))"
+        }
+      ],
+      "id": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "결제 결과",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{event_type}}",
+          "expr": "sum by (event_type) (rate(spring_kafka_listener_milliseconds_count{job=\"order-service\", error=\"none\", event_type=~\"PAYMENT_SUCCESS|PAYMENT_FAIL\"}[$__rate_interval]))"
+        }
+      ],
+      "description": "주문 서비스가 반영한 결제 결과. 성공이면 주문 완료, 실패면 주문 실패",
+      "id": 2,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "취소 요청 (응답 코드별)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{status}}",
+          "expr": "sum by (status) (rate(http_server_requests_milliseconds_count{job=\"order-service\", method=\"POST\", uri=\"/api/v1/orders/{orderId}/cancel\"}[$__rate_interval]))"
+        }
+      ],
+      "id": 3,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "환불 결과",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{event_type}}",
+          "expr": "sum by (event_type) (rate(spring_kafka_listener_milliseconds_count{job=\"order-service\", error=\"none\", event_type=~\"PAYMENT_CANCEL_SUCCEEDED|PAYMENT_CANCEL_FAILED\"}[$__rate_interval]))"
+        }
+      ],
+      "id": 4,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      }
+    },
+    {
+      "id": 1005,
+      "type": "row",
+      "title": "RED · API",
       "collapsed": false,
-      "panels": []
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      }
     },
     {
       "id": 5,
@@ -29,7 +155,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 1
+        "y": 10
       },
       "datasource": {
         "type": "prometheus",
@@ -56,7 +182,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 1
+        "y": 10
       },
       "datasource": {
         "type": "prometheus",
@@ -92,7 +218,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 1
+        "y": 10
       },
       "datasource": {
         "type": "prometheus",
@@ -113,17 +239,17 @@
       ]
     },
     {
-      "id": 101,
+      "id": 1009,
       "type": "row",
-      "title": "동기 호출 (호출하는 쪽에서 잰 값)",
+      "title": "RED · 동기 호출 (호출하는 쪽에서 잰 값)",
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
-      },
-      "collapsed": false,
-      "panels": []
+        "y": 18
+      }
     },
     {
       "id": 8,
@@ -133,7 +259,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 19
       },
       "datasource": {
         "type": "prometheus",
@@ -169,7 +295,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 19
       },
       "datasource": {
         "type": "prometheus",
@@ -190,17 +316,17 @@
       ]
     },
     {
-      "id": 102,
+      "id": 1012,
       "type": "row",
-      "title": "비동기 처리 (Kafka 컨슈머)",
+      "title": "RED · Kafka 컨슈머 처리",
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
-      },
-      "collapsed": false,
-      "panels": []
+        "y": 27
+      }
     },
     {
       "id": 10,
@@ -210,7 +336,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 19
+        "y": 28
       },
       "datasource": {
         "type": "prometheus",
@@ -237,7 +363,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 19
+        "y": 28
       },
       "datasource": {
         "type": "prometheus",
@@ -273,7 +399,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 19
+        "y": 28
       },
       "datasource": {
         "type": "prometheus",
@@ -295,13 +421,13 @@
     {
       "id": 13,
       "type": "timeseries",
-      "title": "DLT 유입 (재시도 끝에 실패한 메시지)",
+      "title": "DLT 유입 (전체 · 재시도 끝에 실패한 메시지)",
       "description": "0이 아니면 사람이 확인해야 한다",
       "gridPos": {
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 36
       },
       "datasource": {
         "type": "prometheus",
@@ -326,17 +452,17 @@
       ]
     },
     {
-      "id": 103,
+      "id": 1017,
       "type": "row",
-      "title": "DB",
+      "title": "USE · DB 커넥션 풀",
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
-      },
-      "collapsed": false,
-      "panels": []
+        "y": 42
+      }
     },
     {
       "id": 14,
@@ -346,7 +472,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 34
+        "y": 43
       },
       "datasource": {
         "type": "prometheus",
@@ -384,7 +510,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 34
+        "y": 43
       },
       "datasource": {
         "type": "prometheus",
@@ -411,7 +537,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 34
+        "y": 43
       },
       "datasource": {
         "type": "prometheus",
@@ -431,14 +557,203 @@
       ]
     },
     {
+      "id": 1021,
+      "type": "row",
+      "title": "USE · Kafka 컨슈머",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      }
+    },
+    {
       "id": 17,
+      "type": "timeseries",
+      "title": "밀린 메시지 수 (lag)",
+      "description": "브로커 기준으로 계산하므로 컨슈머가 죽어 있어도 보인다",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 52
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{consumergroup}} (토픽: {{topic}})",
+          "expr": "sum by (consumergroup, topic) (kafka_consumergroup_lag{consumergroup=~\"${service}-group.*\"})"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "컨슈머 스레드 사용률 (가장 바쁜 스레드)",
+      "description": "1에 가까우면 쉬지 않고 처리 중. lag이 함께 늘면 concurrency 부족",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 52
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} ({{group}})",
+          "expr": "max by (job, group) (label_replace(1 - kafka_consumer_poll_idle_ratio_avg{job=~\"$service\"}, \"group\", \"$1\", \"client_id\", \"consumer-(.*)-[0-9]+\"))"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "리밸런스 횟수",
+      "description": "리밸런스 동안 소비가 멈춘다. 배포 외 시점에 생기면 처리 지연을 의심",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 52
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80
+          }
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}} ({{group}})",
+          "expr": "sum by (job, group) (label_replace(increase(kafka_consumer_coordinator_rebalance_total{job=~\"$service\"}[$__rate_interval]), \"group\", \"$1\", \"client_id\", \"consumer-(.*)-[0-9]+\"))"
+        }
+      ]
+    },
+    {
+      "id": 1025,
+      "type": "row",
+      "title": "USE · Kafka 프로듀서 (outbox 발행)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "전송 버퍼 사용률",
+      "description": "가득 차면 send()가 블록되어 outbox 발행이 밀린다",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 61
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}}",
+          "expr": "max by (job) (1 - kafka_producer_buffer_available_bytes{job=~\"$service\"} / kafka_producer_buffer_total_bytes{job=~\"$service\"})"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "전송 에러",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 61
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}}",
+          "expr": "sum by (job) (rate(kafka_producer_record_error_total{job=~\"$service\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 1028,
+      "type": "row",
+      "title": "DB 서버",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 69
+      }
+    },
+    {
+      "id": 22,
       "type": "timeseries",
       "title": "DB TPS (커밋·롤백)",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 70
       },
       "datasource": {
         "type": "prometheus",
@@ -453,24 +768,24 @@
         {
           "refId": "A",
           "legendFormat": "{{datname}} 커밋",
-          "expr": "sum by (datname) (rate(pg_stat_database_xact_commit{datname=~\"order|payment\"}[$__rate_interval]))"
+          "expr": "sum by (datname) (rate(pg_stat_database_xact_commit{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]))"
         },
         {
           "refId": "B",
           "legendFormat": "{{datname}} 롤백",
-          "expr": "sum by (datname) (rate(pg_stat_database_xact_rollback{datname=~\"order|payment\"}[$__rate_interval]))"
+          "expr": "sum by (datname) (rate(pg_stat_database_xact_rollback{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]))"
         }
       ]
     },
     {
-      "id": 18,
+      "id": 23,
       "type": "timeseries",
       "title": "쿼리 종류별 QPS",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 42
+        "y": 70
       },
       "datasource": {
         "type": "prometheus",
@@ -485,19 +800,19 @@
         {
           "refId": "A",
           "legendFormat": "{{datname}} {{type}}",
-          "expr": "sum by (datname, type) (label_replace(rate(pg_stat_statements_calls_total{datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query=~\"(?is)[[:space:]]*(select|insert|update|delete)[[:space:]].*\", query!~\"(?is).*pg_.*\"}, \"type\", \"$1\", \"query\", \"(?is)[[:space:]]*(select|insert|update|delete)[[:space:]].*\"))"
+          "expr": "sum by (datname, type) (label_replace(rate(pg_stat_statements_calls_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query=~\"(?is)[[:space:]]*(select|insert|update|delete)[[:space:]].*\", query!~\"(?is).*pg_.*\"}, \"type\", \"$1\", \"query\", \"(?is)[[:space:]]*(select|insert|update|delete)[[:space:]].*\"))"
         }
       ]
     },
     {
-      "id": 19,
+      "id": 24,
       "type": "timeseries",
       "title": "쿼리별 호출 Top 10",
       "gridPos": {
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 78
       },
       "datasource": {
         "type": "prometheus",
@@ -512,26 +827,29 @@
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": ["mean", "max"]
+          "calcs": [
+            "mean",
+            "max"
+          ]
         }
       },
       "targets": [
         {
           "refId": "A",
           "legendFormat": "[{{datname}}] {{query}}",
-          "expr": "topk(10, sum by (datname, query) (rate(pg_stat_statements_calls_total{datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"}))"
+          "expr": "topk(10, sum by (datname, query) (rate(pg_stat_statements_calls_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"}))"
         }
       ]
     },
     {
-      "id": 20,
+      "id": 25,
       "type": "timeseries",
       "title": "쿼리별 평균 실행시간 Top 10",
       "gridPos": {
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 88
       },
       "datasource": {
         "type": "prometheus",
@@ -546,19 +864,22 @@
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": ["mean", "max"]
+          "calcs": [
+            "mean",
+            "max"
+          ]
         }
       },
       "targets": [
         {
           "refId": "A",
           "legendFormat": "[{{datname}}] {{queryid}} {{query}}",
-          "expr": "topk(10, (sum by (instance, datname, queryid) (rate(pg_stat_statements_seconds_total{datname=~\"order|payment\"}[$__rate_interval])) / (sum by (instance, datname, queryid) (rate(pg_stat_statements_calls_total{datname=~\"order|payment\"}[$__rate_interval])) > 0)) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"})"
+          "expr": "topk(10, (sum by (instance, datname, queryid) (rate(pg_stat_statements_seconds_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval])) / (sum by (instance, datname, queryid) (rate(pg_stat_statements_calls_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval])) > 0)) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"})"
         }
       ]
     }
   ],
-  "description": "주문·취소 요청이 결제 완료까지 정상 처리되고 있는가",
+  "description": "업무 흐름은 항상 전체, RED·USE·DB는 위에서 고른 서비스만",
   "templating": {
     "list": [
       {
