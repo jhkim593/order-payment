@@ -3,6 +3,8 @@ package jhkim593.orderpayment.order.application;
 import jhkim593.orderpayment.order.application.provided.ProductQuantity;
 import jhkim593.orderpayment.order.application.provided.ProductUpdater;
 import jhkim593.orderpayment.order.application.required.ProductRepository;
+import jhkim593.orderpayment.order.domain.StockChange;
+import jhkim593.orderpayment.order.domain.StockHistory;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +21,12 @@ public class ProductUpdateService implements ProductUpdater {
 
     @Override
     @Transactional
-    public void decreaseStock(List<ProductQuantity> items) {
-        sorted(items).forEach(item -> {
+    public void decreaseStock(List<ProductQuantity> items, StockChange change) {
+        List<ProductQuantity> sorted = sorted(items);
+        productRepository.saveHistories(sorted.stream()
+                .map(item -> StockHistory.decreased(item.productId(), item.quantity(), change))
+                .toList());
+        sorted.forEach(item -> {
             if (!productRepository.decreaseStock(item.productId(), item.quantity())) {
                 productRepository.find(item.productId());
                 throw new OrderException(ErrorCode.PRODUCT_OUT_OF_STOCK);
@@ -30,8 +36,22 @@ public class ProductUpdateService implements ProductUpdater {
 
     @Override
     @Transactional
-    public void increaseStock(List<ProductQuantity> items) {
-        sorted(items).forEach(item -> productRepository.increaseStock(item.productId(), item.quantity()));
+    public void increaseStock(List<ProductQuantity> items, StockChange change) {
+        List<ProductQuantity> sorted = sorted(items);
+        productRepository.saveHistories(sorted.stream()
+                .map(item -> StockHistory.increased(item.productId(), item.quantity(), change))
+                .toList());
+        sorted.forEach(item -> productRepository.increaseStock(item.productId(), item.quantity()));
+    }
+
+    @Override
+    @Transactional
+    public void restock(Long productId, Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new OrderException(ErrorCode.INVALID_RESTOCK_QUANTITY);
+        }
+        productRepository.find(productId);
+        increaseStock(List.of(new ProductQuantity(productId, quantity)), StockChange.restocked());
     }
 
     private List<ProductQuantity> sorted(List<ProductQuantity> items) {

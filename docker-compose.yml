@@ -210,7 +210,8 @@ services:
     command: run --quiet /scripts/traffic.js
     environment:
       BASE_URL: http://order-service:8081
-      RATE: ${TRAFFIC_RATE:-1}
+      READ_RPS: ${READ_RPS:-1000}
+      WRITE_RPS: ${WRITE_RPS:-10}
     volumes:
       - ./loadtest:/scripts
     depends_on:

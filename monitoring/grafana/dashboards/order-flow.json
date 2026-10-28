@@ -254,7 +254,7 @@
     {
       "id": 8,
       "type": "timeseries",
-      "title": "호출 에러율 (order→payment, payment→PG)",
+      "title": "호출 에러율",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -290,7 +290,7 @@
     {
       "id": 9,
       "type": "timeseries",
-      "title": "호출 p99 응답시간 (order→payment, payment→PG)",
+      "title": "호출 p99 응답시간",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -452,9 +452,9 @@
       ]
     },
     {
-      "id": 1017,
+      "id": 1028,
       "type": "row",
-      "title": "USE · DB 커넥션 풀",
+      "title": "RED · DB 쿼리",
       "collapsed": false,
       "panels": [],
       "gridPos": {
@@ -465,6 +465,125 @@
       }
     },
     {
+      "id": 22,
+      "type": "timeseries",
+      "title": "DB TPS (커밋·롤백)",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{datname}} 커밋",
+          "expr": "sum by (datname) (rate(pg_stat_database_xact_commit{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{datname}} 롤백",
+          "expr": "sum by (datname) (rate(pg_stat_database_xact_rollback{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "type": "timeseries",
+      "title": "쿼리별 호출 Top 10",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "[{{datname}}] {{query}}",
+          "expr": "topk(10, sum by (datname, query) (rate(pg_stat_statements_calls_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) max by (instance, queryid, query) (pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"})))"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "쿼리별 평균 실행시간 Top 10",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 61
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "[{{datname}}] {{queryid}} {{query}}",
+          "expr": "topk(10, (sum by (instance, datname, queryid) (rate(pg_stat_statements_seconds_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval])) / (sum by (instance, datname, queryid) (rate(pg_stat_statements_calls_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval])) > 0)) * on (instance, queryid) group_left (query) max by (instance, queryid, query) (pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"}))"
+        }
+      ]
+    },
+    {
+      "id": 1017,
+      "type": "row",
+      "title": "USE · DB 커넥션 풀",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 71
+      }
+    },
+    {
       "id": 14,
       "type": "timeseries",
       "title": "커넥션 풀 사용량",
@@ -472,7 +591,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 43
+        "y": 72
       },
       "datasource": {
         "type": "prometheus",
@@ -510,7 +629,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 43
+        "y": 72
       },
       "datasource": {
         "type": "prometheus",
@@ -537,7 +656,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 43
+        "y": 72
       },
       "datasource": {
         "type": "prometheus",
@@ -566,7 +685,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 80
       }
     },
     {
@@ -578,7 +697,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 52
+        "y": 81
       },
       "datasource": {
         "type": "prometheus",
@@ -607,7 +726,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 52
+        "y": 81
       },
       "datasource": {
         "type": "prometheus",
@@ -637,7 +756,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 52
+        "y": 81
       },
       "datasource": {
         "type": "prometheus",
@@ -671,7 +790,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 89
       }
     },
     {
@@ -683,7 +802,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 61
+        "y": 90
       },
       "datasource": {
         "type": "prometheus",
@@ -712,7 +831,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 61
+        "y": 90
       },
       "datasource": {
         "type": "prometheus",
@@ -729,152 +848,6 @@
           "refId": "A",
           "legendFormat": "{{job}}",
           "expr": "sum by (job) (rate(kafka_producer_record_error_total{job=~\"$service\"}[$__rate_interval]))"
-        }
-      ]
-    },
-    {
-      "id": 1028,
-      "type": "row",
-      "title": "DB 서버",
-      "collapsed": false,
-      "panels": [],
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 69
-      }
-    },
-    {
-      "id": 22,
-      "type": "timeseries",
-      "title": "DB TPS (커밋·롤백)",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 70
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "legendFormat": "{{datname}} 커밋",
-          "expr": "sum by (datname) (rate(pg_stat_database_xact_commit{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]))"
-        },
-        {
-          "refId": "B",
-          "legendFormat": "{{datname}} 롤백",
-          "expr": "sum by (datname) (rate(pg_stat_database_xact_rollback{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]))"
-        }
-      ]
-    },
-    {
-      "id": 23,
-      "type": "timeseries",
-      "title": "쿼리 종류별 QPS",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 70
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "legendFormat": "{{datname}} {{type}}",
-          "expr": "sum by (datname, type) (label_replace(rate(pg_stat_statements_calls_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query=~\"(?is)[[:space:]]*(select|insert|update|delete)[[:space:]].*\", query!~\"(?is).*pg_.*\"}, \"type\", \"$1\", \"query\", \"(?is)[[:space:]]*(select|insert|update|delete)[[:space:]].*\"))"
-        }
-      ]
-    },
-    {
-      "id": 24,
-      "type": "timeseries",
-      "title": "쿼리별 호출 Top 10",
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 78
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops"
-        }
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "mean",
-            "max"
-          ]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "legendFormat": "[{{datname}}] {{query}}",
-          "expr": "topk(10, sum by (datname, query) (rate(pg_stat_statements_calls_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval]) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"}))"
-        }
-      ]
-    },
-    {
-      "id": 25,
-      "type": "timeseries",
-      "title": "쿼리별 평균 실행시간 Top 10",
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 88
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s"
-        }
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "mean",
-            "max"
-          ]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "legendFormat": "[{{datname}}] {{queryid}} {{query}}",
-          "expr": "topk(10, (sum by (instance, datname, queryid) (rate(pg_stat_statements_seconds_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval])) / (sum by (instance, datname, queryid) (rate(pg_stat_statements_calls_total{service=~\"$service\", datname=~\"order|payment\"}[$__rate_interval])) > 0)) * on (instance, queryid) group_left (query) pg_stat_statements_query_id{query!~\"(?is).*pg_.*\"})"
         }
       ]
     }

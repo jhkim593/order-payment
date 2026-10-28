@@ -12,6 +12,7 @@ import jhkim593.orderpayment.order.domain.OrderCancellation;
 import jhkim593.orderpayment.order.domain.OrderProduct;
 import jhkim593.orderpayment.order.domain.OrderStatus;
 import jhkim593.orderpayment.order.domain.Product;
+import jhkim593.orderpayment.order.domain.StockChange;
 import jhkim593.orderpayment.order.domain.dto.CancelOrderRequestDto;
 import jhkim593.orderpayment.order.domain.dto.OrderProcessRequestDto;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,7 @@ public class OrderTransactionManager {
             order.addOrderProduct(orderProduct);
         }
         Order saved = orderRepository.save(order);
-        productUpdater.decreaseStock(quantities);
+        productUpdater.decreaseStock(quantities, StockChange.ordered(saved.getOrderId()));
         return saved;
     }
 
@@ -76,7 +77,7 @@ public class OrderTransactionManager {
     @Transactional
     public void failed(Long orderId) {
         if (orderRepository.updateStatus(orderId, OrderStatus.FAILED)) {
-            productUpdater.increaseStock(toQuantities(orderRepository.find(orderId)));
+            productUpdater.increaseStock(toQuantities(orderRepository.find(orderId)), StockChange.orderFailed(orderId));
         }
     }
 
@@ -99,7 +100,7 @@ public class OrderTransactionManager {
         orderRepository.save(order);
         productUpdater.increaseStock(cancellation.getProducts().stream()
                 .map(p -> new ProductQuantity(p.getOrderProduct().getProduct().getProductId(), p.getQuantity()))
-                .toList());
+                .toList(), StockChange.cancelled(orderId, cancellationId));
     }
 
     @Transactional

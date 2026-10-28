@@ -57,3 +57,5 @@ management:
         http.server.requests: true
         http.client.requests: true
         spring.kafka.listener: true
+        hikaricp.connections.acquire: true
+        hikaricp.connections.usage: true

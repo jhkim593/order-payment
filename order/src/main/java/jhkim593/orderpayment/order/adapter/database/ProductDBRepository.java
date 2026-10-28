@@ -1,8 +1,10 @@
 package jhkim593.orderpayment.order.adapter.database;
 
 import jhkim593.orderpayment.order.adapter.database.jpa.ProductJpaRepository;
+import jhkim593.orderpayment.order.adapter.database.jpa.StockHistoryJpaRepository;
 import jhkim593.orderpayment.order.application.required.ProductRepository;
 import jhkim593.orderpayment.order.domain.Product;
+import jhkim593.orderpayment.order.domain.StockHistory;
 import jhkim593.orderpayment.order.domain.error.ErrorCode;
 import jhkim593.orderpayment.order.domain.error.OrderException;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductDBRepository implements ProductRepository {
     private final ProductJpaRepository productJpaRepository;
+    private final StockHistoryJpaRepository stockHistoryJpaRepository;
 
     @Override
     public Product find(Long id) {
@@ -38,5 +41,10 @@ public class ProductDBRepository implements ProductRepository {
     @Override
     public void increaseStock(Long id, int quantity) {
         productJpaRepository.increaseStock(id, quantity);
+    }
+
+    @Override
+    public void saveHistories(List<StockHistory> histories) {
+        stockHistoryJpaRepository.saveAll(histories);
     }
 }

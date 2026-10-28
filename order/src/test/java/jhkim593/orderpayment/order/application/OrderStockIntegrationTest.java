@@ -33,6 +33,7 @@ import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doAnswer;
 
@@ -238,11 +239,109 @@ class OrderStockIntegrationTest {
             other.executeWithoutResult(status ->
                     jdbcTemplate.update("UPDATE product SET stock = stock - 2 WHERE product_id = ?", productId));
             return invocation.callRealMethod();
-        }).when(productUpdater).increaseStock(anyList());
+        }).when(productUpdater).increaseStock(anyList(), any());
 
         orderTransactionManager.failed(order.getOrderId());
 
         assertThat(stockOf(productId)).isEqualTo(8);   // 7 - 2 + 3
+    }
+
+    @Test
+    void 입고하면_재고가_늘어난다() {
+        Long productId = createProduct(10);
+
+        productUpdater.restock(productId, 5);
+
+        assertThat(stockOf(productId)).isEqualTo(15);
+    }
+
+    @Test
+    void 입고_수량이_1보다_작으면_거절한다() {
+        Long productId = createProduct(10);
+
+        assertThatThrownBy(() -> productUpdater.restock(productId, 0))
+                .isInstanceOf(OrderException.class)
+                .extracting(e -> ((OrderException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_RESTOCK_QUANTITY);
+        assertThat(stockOf(productId)).isEqualTo(10);
+    }
+
+    @Test
+    void 없는_상품에_입고하면_거절한다() {
+        assertThatThrownBy(() -> productUpdater.restock(-1L, 5))
+                .isInstanceOf(OrderException.class)
+                .extracting(e -> ((OrderException) e).getErrorCode())
+                .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
+    }
+
+    @Test
+    void 재고가_바뀔_때마다_이유와_주문_취소_건을_이력으로_남긴다() {
+        Long productId = createProduct(0);
+        productUpdater.restock(productId, 10);
+        Order failed = orderTransactionManager.createOrder(request(item(productId, 2)));
+        orderTransactionManager.failed(failed.getOrderId());
+        Order order = orderTransactionManager.createOrder(request(item(productId, 3)));
+        orderTransactionManager.succeeded(order.getOrderId());
+        OrderCancellation cancellation = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 1));
+        orderTransactionManager.cancelSucceeded(order.getOrderId(), cancellation.getCancellationId());
+
+        assertThat(historiesOf(productId)).containsExactly(
+                List.of("RESTOCKED", 10, 0L, 0L),
+                List.of("ORDERED", -2, failed.getOrderId(), 0L),
+                List.of("ORDER_FAILED", 2, failed.getOrderId(), 0L),
+                List.of("ORDERED", -3, order.getOrderId(), 0L),
+                List.of("CANCELLED", 1, order.getOrderId(), cancellation.getCancellationId()));
+    }
+
+    @Test
+    void 상품마다_이력을_모두_더하면_현재_재고와_같다() {
+        Long productId = createProduct(0);
+        productUpdater.restock(productId, 10);
+        Order failed = orderTransactionManager.createOrder(request(item(productId, 2)));
+        orderTransactionManager.failed(failed.getOrderId());
+        Order order = orderTransactionManager.createOrder(request(item(productId, 3)));
+        orderTransactionManager.succeeded(order.getOrderId());
+        OrderCancellation cancellation = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 1));
+        orderTransactionManager.cancelSucceeded(order.getOrderId(), cancellation.getCancellationId());
+
+        assertThat(historySumOf(productId)).isEqualTo(stockOf(productId));
+    }
+
+    @Test
+    void 재고가_모자라_주문이_거절되면_이력도_남지_않는다() {
+        Long enough = createProduct(10);
+        Long short_ = createProduct(1);
+
+        assertThatThrownBy(() -> orderTransactionManager.createOrder(request(item(enough, 3), item(short_, 2))))
+                .isInstanceOf(OrderException.class);
+
+        assertThat(historiesOf(enough)).isEmpty();
+        assertThat(historiesOf(short_)).isEmpty();
+    }
+
+    @Test
+    void 같은_취소_결과가_여러_번_와도_이력은_한_번만_남는다() {
+        Long productId = createProduct(10);
+        Order order = orderTransactionManager.createOrder(request(item(productId, 3)));
+        orderTransactionManager.succeeded(order.getOrderId());
+        OrderCancellation cancellation = orderTransactionManager.canceling(order.getOrderId(), cancelRequest(order, 1));
+
+        orderTransactionManager.cancelSucceeded(order.getOrderId(), cancellation.getCancellationId());
+        orderTransactionManager.cancelSucceeded(order.getOrderId(), cancellation.getCancellationId());
+
+        assertThat(historiesOf(productId)).filteredOn(h -> h.get(0).equals("CANCELLED")).hasSize(1);
+    }
+
+    private List<List<Object>> historiesOf(Long productId) {
+        return jdbcTemplate.query("""
+                SELECT reason, quantity, COALESCE(order_id, 0) AS order_id, COALESCE(cancellation_id, 0) AS cancellation_id
+                FROM stock_history WHERE product_id = ? ORDER BY stock_history_id
+                """, (rs, i) -> List.<Object>of(rs.getString(1), rs.getInt(2), rs.getLong(3), rs.getLong(4)), productId);
+    }
+
+    private int historySumOf(Long productId) {
+        return jdbcTemplate.queryForObject(
+                "SELECT COALESCE(SUM(quantity), 0) FROM stock_history WHERE product_id = ?", Integer.class, productId);
     }
 
     private Long createProduct(int stock) {

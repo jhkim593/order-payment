@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum ErrorCode {
     PRODUCT_NOT_FOUND("P001", 404, "product not found", false),
     PRODUCT_OUT_OF_STOCK("P002", 409, "product out of stock", false),
+    INVALID_RESTOCK_QUANTITY("P003", 400, "restock quantity must be positive", false),
     ORDER_NOT_FOUND("O001", 404, "order not found", false),
     DUPLICATE_ORDER_PRODUCT("O006", 400, "duplicate product in order", false),
     ORDER_NOT_SUCCEEDED("O004", 400, "order not succeeded", false),
